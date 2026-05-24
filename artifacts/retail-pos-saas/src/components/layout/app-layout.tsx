@@ -1,23 +1,14 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { Home, Package, ShoppingCart, Tags, Users, Settings, LogOut } from "lucide-react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, logout } = useAuth();
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setLocation("/login");
-    }
-  }, [isAuthenticated, setLocation]);
 
   const { data: user } = useGetMe({ query: { enabled: isAuthenticated, queryKey: getGetMeQueryKey() } });
-
-  if (!isAuthenticated) return null;
 
   return (
     <SidebarProvider>

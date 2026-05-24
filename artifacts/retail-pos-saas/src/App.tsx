@@ -1,8 +1,9 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Redirect, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/layout/app-layout";
+import { useAuth } from "@/hooks/use-auth";
 
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -14,30 +15,51 @@ import Users from "@/pages/users";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+});
+
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Redirect to="/login" />;
+  return (
+    <AppLayout>
+      <Component />
+    </AppLayout>
+  );
+}
 
 function Router() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+      <Route path="/login">
+        {isAuthenticated ? <Redirect to="/dashboard" /> : <Login />}
+      </Route>
+      <Route path="/register">
+        {isAuthenticated ? <Redirect to="/dashboard" /> : <Register />}
+      </Route>
+      <Route path="/dashboard">
+        <ProtectedRoute component={Dashboard} />
+      </Route>
+      <Route path="/products">
+        <ProtectedRoute component={Products} />
+      </Route>
+      <Route path="/orders">
+        <ProtectedRoute component={Orders} />
+      </Route>
+      <Route path="/categories">
+        <ProtectedRoute component={Categories} />
+      </Route>
+      <Route path="/users">
+        <ProtectedRoute component={Users} />
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute component={Settings} />
+      </Route>
       <Route path="/">
-        <AppLayout>
-          <Switch>
-            <Route path="/" component={() => {
-              // Redirect handled by layout or just redirect component
-              window.location.href = "/dashboard";
-              return null;
-            }} />
-            <Route path="/dashboard" component={Dashboard} />
-            <Route path="/products" component={Products} />
-            <Route path="/orders" component={Orders} />
-            <Route path="/categories" component={Categories} />
-            <Route path="/users" component={Users} />
-            <Route path="/settings" component={Settings} />
-            <Route component={NotFound} />
-          </Switch>
-        </AppLayout>
+        {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
       </Route>
       <Route component={NotFound} />
     </Switch>
