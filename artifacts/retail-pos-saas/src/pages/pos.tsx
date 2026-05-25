@@ -12,6 +12,9 @@ import {
   useValidateCoupon,
   usePosQuickAddCustomer,
   useGetCustomerPosHistory,
+  useGetActiveSession,
+  useOpenCashierSession,
+  useCloseCashierSession,
   getListHeldBillsQueryKey,
   getListCustomersQueryKey,
   useGetMe,
@@ -28,7 +31,8 @@ import {
   Search, ShoppingCart, Trash2, Plus, Minus, User, Pause, Play,
   Receipt, X, CreditCard, Banknote, Smartphone, Printer, LayoutDashboard,
   Clock, ChevronRight, Star, Zap, Tag, Gift, RotateCcw, MessageCircle,
-  UserPlus, History, Percent, DollarSign,
+  UserPlus, History, Percent, DollarSign, Timer, CheckCircle2, IndianRupee,
+  FileText, LogOut,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -659,6 +663,12 @@ export default function POS() {
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
   const [loyaltyToRedeem, setLoyaltyToRedeem] = useState(0);
 
+  // ── Cashier Shift ─────────────────────────────────────────────────────────
+  const [showShift, setShowShift] = useState(false);
+  const [shiftOpeningCash, setShiftOpeningCash] = useState("0");
+  const [shiftClosingCash, setShiftClosingCash] = useState("0");
+  const [shiftNotes, setShiftNotes] = useState("");
+
   // ── Modals ────────────────────────────────────────────────────────────────
   const [showPayment, setShowPayment] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -700,6 +710,9 @@ export default function POS() {
   const { data: categories = [] } = useListCategories();
   const { data: heldBills = [] } = useListHeldBills();
   const { data: me } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const { data: activeSession } = useGetActiveSession({ query: { queryKey: ["pos-active-session"] } });
+  const openSession = useOpenCashierSession();
+  const closeSession = useCloseCashierSession();
   const validateCouponMutation = useValidateCoupon();
   const createSale = useCreateSale();
   const createHeldBill = useCreateHeldBill();
@@ -971,7 +984,7 @@ export default function POS() {
           <span className="font-bold text-sm">POS Billing</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
             {currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -985,6 +998,26 @@ export default function POS() {
               <span>{me.name}</span>
             </div>
           )}
+
+          {/* Cashier shift indicator */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-8 gap-1 text-xs hidden sm:flex ${activeSession ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100" : "text-muted-foreground"}`}
+            onClick={() => setShowShift(true)}
+          >
+            <Timer className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">{activeSession ? "Shift Open" : "Open Shift"}</span>
+          </Button>
+
+          {/* Invoice History */}
+          <Link href="/pos/invoices">
+            <Button variant="outline" size="sm" className="h-8 gap-1 text-xs hidden sm:flex text-muted-foreground">
+              <History className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">History</span>
+            </Button>
+          </Link>
+
           <Button variant="outline" size="sm" className="relative h-8 gap-1 text-xs" onClick={() => setShowHeldBills(true)}>
             <Pause className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Held</span>
@@ -995,7 +1028,7 @@ export default function POS() {
             )}
           </Button>
           <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hidden sm:flex" onClick={logout}>
-            Logout
+            <LogOut className="h-3.5 w-3.5 sm:mr-1" /><span className="hidden md:inline">Logout</span>
           </Button>
         </div>
       </header>
@@ -1452,6 +1485,133 @@ export default function POS() {
           totals={receiptTotals}
           onClose={() => { setShowReceipt(false); }}
         />
+      )}
+
+      {/* ─── Cashier Shift Modal ──────────────────────────────────────────── */}
+      {showShift && (
+        <Dialog open onOpenChange={() => setShowShift(false)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Timer className="h-4 w-4" />
+                Cashier Shift
+              </DialogTitle>
+            </DialogHeader>
+
+            {activeSession ? (
+              <div className="space-y-4">
+                {/* Active session info */}
+                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-green-700 font-medium text-sm">
+                    <CheckCircle2 className="h-4 w-4" />Shift is Open
+                  </div>
+                  <div className="text-xs text-green-600">
+                    Opened: {new Date((activeSession as { openedAt: string }).openedAt).toLocaleString("en-IN")}
+                  </div>
+                  <div className="text-xs text-green-600">
+                    Opening Cash: ₹{parseFloat(String((activeSession as { openingCash: number | string }).openingCash)).toFixed(2)}
+                  </div>
+                </div>
+
+                {/* Close session */}
+                <div className="space-y-3">
+                  <h3 className="font-medium text-sm">Close Shift</h3>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Closing Cash (physical count)</label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={shiftClosingCash}
+                        onChange={(e) => setShiftClosingCash(e.target.value)}
+                        className="pl-7 h-9"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Notes (optional)</label>
+                    <Input
+                      value={shiftNotes}
+                      onChange={(e) => setShiftNotes(e.target.value)}
+                      placeholder="Any end-of-shift notes"
+                      className="h-9"
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    variant="destructive"
+                    disabled={closeSession.isPending}
+                    onClick={async () => {
+                      try {
+                        await closeSession.mutateAsync({
+                          id: (activeSession as { id: number }).id,
+                          data: { closingCash: parseFloat(shiftClosingCash) || 0, notes: shiftNotes || undefined },
+                        });
+                        qc.invalidateQueries({ queryKey: ["pos-active-session"] });
+                        toast({ title: "Shift closed successfully" });
+                        setShowShift(false);
+                        setShiftClosingCash("0");
+                        setShiftNotes("");
+                      } catch {
+                        toast({ title: "Failed to close shift", variant: "destructive" });
+                      }
+                    }}
+                  >
+                    Close Shift
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Open a shift to start tracking your cashier session, sales, and cash flow.
+                </p>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Opening Cash in Drawer</label>
+                  <div className="relative">
+                    <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      min={0}
+                      value={shiftOpeningCash}
+                      onChange={(e) => setShiftOpeningCash(e.target.value)}
+                      className="pl-7 h-9"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Notes (optional)</label>
+                  <Input
+                    value={shiftNotes}
+                    onChange={(e) => setShiftNotes(e.target.value)}
+                    placeholder="e.g. Morning shift"
+                    className="h-9"
+                  />
+                </div>
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={openSession.isPending}
+                  onClick={async () => {
+                    try {
+                      await openSession.mutateAsync({
+                        data: { openingCash: parseFloat(shiftOpeningCash) || 0, notes: shiftNotes || undefined },
+                      });
+                      qc.invalidateQueries({ queryKey: ["pos-active-session"] });
+                      toast({ title: "Shift opened", description: `Opening cash: ₹${parseFloat(shiftOpeningCash).toFixed(2)}` });
+                      setShowShift(false);
+                      setShiftNotes("");
+                    } catch {
+                      toast({ title: "Failed to open shift", variant: "destructive" });
+                    }
+                  }}
+                >
+                  <Timer className="h-4 w-4 mr-2" />Open Shift
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

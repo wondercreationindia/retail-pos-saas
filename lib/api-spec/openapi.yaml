@@ -1051,6 +1051,193 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Sale"
+    patch:
+      operationId: editSale
+      tags: [pos]
+      summary: Edit a completed sale (manager only, creates audit log)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditSaleInput"
+      responses:
+        "200":
+          description: Updated sale
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /pos/sales/{id}/void:
+    post:
+      operationId: voidSale
+      tags: [pos]
+      summary: Void or cancel a sale (manager only, restores inventory)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoidSaleInput"
+      responses:
+        "200":
+          description: Voided sale
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /pos/sales/{id}/print:
+    post:
+      operationId: logSalePrint
+      tags: [pos]
+      summary: Log a print action for a sale
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrintLogInput"
+      responses:
+        "201":
+          description: Print log created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrintLog"
+
+  /pos/sales/{id}/whatsapp:
+    post:
+      operationId: logSaleWhatsapp
+      tags: [pos]
+      summary: Log a WhatsApp share action for a sale
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WhatsappLogInput"
+      responses:
+        "201":
+          description: WhatsApp log created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhatsappLog"
+
+  /pos/sales/{id}/edits:
+    get:
+      operationId: getSaleEdits
+      tags: [pos]
+      summary: Get audit log of edits for a sale
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Edit history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvoiceEdit"
+
+  /pos/sessions:
+    get:
+      operationId: listCashierSessions
+      tags: [pos]
+      summary: List cashier sessions
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [open, closed] }
+      responses:
+        "200":
+          description: Sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CashierSession"
+    post:
+      operationId: openCashierSession
+      tags: [pos]
+      summary: Open a cashier shift session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenSessionInput"
+      responses:
+        "201":
+          description: Session opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CashierSession"
+
+  /pos/sessions/active:
+    get:
+      operationId: getActiveSession
+      tags: [pos]
+      summary: Get current cashier's active session
+      responses:
+        "200":
+          description: Active session or null
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CashierSession"
+
+  /pos/sessions/{id}/close:
+    patch:
+      operationId: closeCashierSession
+      tags: [pos]
+      summary: Close a cashier shift session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CloseSessionInput"
+      responses:
+        "200":
+          description: Session closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CashierSession"
 
   # ─── HELD BILLS ──────────────────────────────────────────────────────────────
   /pos/held-bills:
@@ -2597,4 +2784,155 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+          format: date-time
+
+    # ─── EDIT SALE SCHEMAS ────────────────────────────────────────────────────
+    EditSaleInput:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        payments:
+          type: array
+          items:
+            type: object
+        discountAmount:
+          type: number
+          format: float
+        notes:
+          type: ["string", "null"]
+        reason:
+          type: string
+        customerId:
+          type: ["integer", "null"]
+        customerName:
+          type: ["string", "null"]
+
+    VoidSaleInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+
+    InvoiceEdit:
+      type: object
+      required: [id, saleId, reason, createdAt]
+      properties:
+        id:
+          type: integer
+        saleId:
+          type: integer
+        editedBy:
+          type: ["integer", "null"]
+        reason:
+          type: string
+        beforeSnapshot:
+          type: object
+        afterSnapshot:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+
+    PrintLogInput:
+      type: object
+      required: [printType]
+      properties:
+        printType:
+          type: string
+          enum: [thermal, a4, gst]
+        isDuplicate:
+          type: boolean
+
+    PrintLog:
+      type: object
+      required: [id, saleId, printType, createdAt]
+      properties:
+        id:
+          type: integer
+        saleId:
+          type: integer
+        printType:
+          type: string
+        isDuplicate:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    WhatsappLogInput:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+
+    WhatsappLog:
+      type: object
+      required: [id, saleId, phone, status, createdAt]
+      properties:
+        id:
+          type: integer
+        saleId:
+          type: integer
+        phone:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── CASHIER SESSION SCHEMAS ──────────────────────────────────────────────
+    OpenSessionInput:
+      type: object
+      required: [openingCash]
+      properties:
+        openingCash:
+          type: number
+          format: float
+        notes:
+          type: ["string", "null"]
+
+    CloseSessionInput:
+      type: object
+      required: [closingCash]
+      properties:
+        closingCash:
+          type: number
+          format: float
+        notes:
+          type: ["string", "null"]
+
+    CashierSession:
+      type: object
+      required: [id, tenantId, cashierId, openingCash, status, openedAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        cashierId:
+          type: integer
+        openingCash:
+          type: number
+          format: float
+        closingCash:
+          type: ["number", "null"]
+          format: float
+        expectedCash:
+          type: ["number", "null"]
+          format: float
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        openedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: ["string", "null"]
           format: date-time

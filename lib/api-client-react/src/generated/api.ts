@@ -21,15 +21,18 @@ import type {
 
 import type {
   AuthResponse,
+  CashierSession,
   Category,
   CategoryInput,
   CategoryUpdate,
+  CloseSessionInput,
   CouponValidateInput,
   CouponValidateResult,
   Customer,
   CustomerInput,
   CustomerSaleHistoryItem,
   DashboardSummary,
+  EditSaleInput,
   ErrorResponse,
   GetInventoryLogsParams,
   HealthStatus,
@@ -37,6 +40,8 @@ import type {
   HeldBillInput,
   InventoryLog,
   InventoryOverview,
+  InvoiceEdit,
+  ListCashierSessionsParams,
   ListCustomersParams,
   ListOrdersParams,
   ListProductsParams,
@@ -47,9 +52,12 @@ import type {
   LoginInput,
   LowStockProduct,
   LoyaltyTransaction,
+  OpenSessionInput,
   Order,
   OrderInput,
   OrderUpdate,
+  PrintLog,
+  PrintLogInput,
   Product,
   ProductInput,
   ProductUpdate,
@@ -72,7 +80,10 @@ import type {
   TopProduct,
   User,
   UserInput,
-  UserUpdate
+  UserUpdate,
+  VoidSaleInput,
+  WhatsappLog,
+  WhatsappLogInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -4068,6 +4079,675 @@ export function useGetSale<TData = Awaited<ReturnType<typeof getSale>>, TError =
 
 
 
+
+export const getEditSaleUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/sales/${id}`
+}
+
+/**
+ * @summary Edit a completed sale (manager only, creates audit log)
+ */
+export const editSale = async (id: number,
+    editSaleInput: EditSaleInput, options?: RequestInit): Promise<Sale> => {
+
+  return customFetch<Sale>(getEditSaleUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      editSaleInput,)
+  }
+);}
+
+
+
+
+export const getEditSaleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editSale>>, TError,{id: number;data: BodyType<EditSaleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof editSale>>, TError,{id: number;data: BodyType<EditSaleInput>}, TContext> => {
+
+const mutationKey = ['editSale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof editSale>>, {id: number;data: BodyType<EditSaleInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  editSale(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EditSaleMutationResult = NonNullable<Awaited<ReturnType<typeof editSale>>>
+    export type EditSaleMutationBody = BodyType<EditSaleInput>
+    export type EditSaleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Edit a completed sale (manager only, creates audit log)
+ */
+export const useEditSale = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editSale>>, TError,{id: number;data: BodyType<EditSaleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof editSale>>,
+        TError,
+        {id: number;data: BodyType<EditSaleInput>},
+        TContext
+      > => {
+      return useMutation(getEditSaleMutationOptions(options));
+    }
+
+export const getVoidSaleUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/sales/${id}/void`
+}
+
+/**
+ * @summary Void or cancel a sale (manager only, restores inventory)
+ */
+export const voidSale = async (id: number,
+    voidSaleInput: VoidSaleInput, options?: RequestInit): Promise<Sale> => {
+
+  return customFetch<Sale>(getVoidSaleUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      voidSaleInput,)
+  }
+);}
+
+
+
+
+export const getVoidSaleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof voidSale>>, TError,{id: number;data: BodyType<VoidSaleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof voidSale>>, TError,{id: number;data: BodyType<VoidSaleInput>}, TContext> => {
+
+const mutationKey = ['voidSale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof voidSale>>, {id: number;data: BodyType<VoidSaleInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  voidSale(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VoidSaleMutationResult = NonNullable<Awaited<ReturnType<typeof voidSale>>>
+    export type VoidSaleMutationBody = BodyType<VoidSaleInput>
+    export type VoidSaleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Void or cancel a sale (manager only, restores inventory)
+ */
+export const useVoidSale = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof voidSale>>, TError,{id: number;data: BodyType<VoidSaleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof voidSale>>,
+        TError,
+        {id: number;data: BodyType<VoidSaleInput>},
+        TContext
+      > => {
+      return useMutation(getVoidSaleMutationOptions(options));
+    }
+
+export const getLogSalePrintUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/sales/${id}/print`
+}
+
+/**
+ * @summary Log a print action for a sale
+ */
+export const logSalePrint = async (id: number,
+    printLogInput: PrintLogInput, options?: RequestInit): Promise<PrintLog> => {
+
+  return customFetch<PrintLog>(getLogSalePrintUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      printLogInput,)
+  }
+);}
+
+
+
+
+export const getLogSalePrintMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logSalePrint>>, TError,{id: number;data: BodyType<PrintLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logSalePrint>>, TError,{id: number;data: BodyType<PrintLogInput>}, TContext> => {
+
+const mutationKey = ['logSalePrint'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logSalePrint>>, {id: number;data: BodyType<PrintLogInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  logSalePrint(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogSalePrintMutationResult = NonNullable<Awaited<ReturnType<typeof logSalePrint>>>
+    export type LogSalePrintMutationBody = BodyType<PrintLogInput>
+    export type LogSalePrintMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Log a print action for a sale
+ */
+export const useLogSalePrint = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logSalePrint>>, TError,{id: number;data: BodyType<PrintLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logSalePrint>>,
+        TError,
+        {id: number;data: BodyType<PrintLogInput>},
+        TContext
+      > => {
+      return useMutation(getLogSalePrintMutationOptions(options));
+    }
+
+export const getLogSaleWhatsappUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/sales/${id}/whatsapp`
+}
+
+/**
+ * @summary Log a WhatsApp share action for a sale
+ */
+export const logSaleWhatsapp = async (id: number,
+    whatsappLogInput: WhatsappLogInput, options?: RequestInit): Promise<WhatsappLog> => {
+
+  return customFetch<WhatsappLog>(getLogSaleWhatsappUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      whatsappLogInput,)
+  }
+);}
+
+
+
+
+export const getLogSaleWhatsappMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logSaleWhatsapp>>, TError,{id: number;data: BodyType<WhatsappLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logSaleWhatsapp>>, TError,{id: number;data: BodyType<WhatsappLogInput>}, TContext> => {
+
+const mutationKey = ['logSaleWhatsapp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logSaleWhatsapp>>, {id: number;data: BodyType<WhatsappLogInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  logSaleWhatsapp(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogSaleWhatsappMutationResult = NonNullable<Awaited<ReturnType<typeof logSaleWhatsapp>>>
+    export type LogSaleWhatsappMutationBody = BodyType<WhatsappLogInput>
+    export type LogSaleWhatsappMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Log a WhatsApp share action for a sale
+ */
+export const useLogSaleWhatsapp = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logSaleWhatsapp>>, TError,{id: number;data: BodyType<WhatsappLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logSaleWhatsapp>>,
+        TError,
+        {id: number;data: BodyType<WhatsappLogInput>},
+        TContext
+      > => {
+      return useMutation(getLogSaleWhatsappMutationOptions(options));
+    }
+
+export const getGetSaleEditsUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/sales/${id}/edits`
+}
+
+/**
+ * @summary Get audit log of edits for a sale
+ */
+export const getSaleEdits = async (id: number, options?: RequestInit): Promise<InvoiceEdit[]> => {
+
+  return customFetch<InvoiceEdit[]>(getGetSaleEditsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSaleEditsQueryKey = (id: number,) => {
+    return [
+    `/api/pos/sales/${id}/edits`
+    ] as const;
+    }
+
+
+export const getGetSaleEditsQueryOptions = <TData = Awaited<ReturnType<typeof getSaleEdits>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSaleEdits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSaleEditsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSaleEdits>>> = ({ signal }) => getSaleEdits(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSaleEdits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSaleEditsQueryResult = NonNullable<Awaited<ReturnType<typeof getSaleEdits>>>
+export type GetSaleEditsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get audit log of edits for a sale
+ */
+
+export function useGetSaleEdits<TData = Awaited<ReturnType<typeof getSaleEdits>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSaleEdits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSaleEditsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListCashierSessionsUrl = (params?: ListCashierSessionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/pos/sessions?${stringifiedParams}` : `/api/pos/sessions`
+}
+
+/**
+ * @summary List cashier sessions
+ */
+export const listCashierSessions = async (params?: ListCashierSessionsParams, options?: RequestInit): Promise<CashierSession[]> => {
+
+  return customFetch<CashierSession[]>(getListCashierSessionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCashierSessionsQueryKey = (params?: ListCashierSessionsParams,) => {
+    return [
+    `/api/pos/sessions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCashierSessionsQueryOptions = <TData = Awaited<ReturnType<typeof listCashierSessions>>, TError = ErrorType<unknown>>(params?: ListCashierSessionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCashierSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCashierSessionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCashierSessions>>> = ({ signal }) => listCashierSessions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCashierSessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCashierSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listCashierSessions>>>
+export type ListCashierSessionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List cashier sessions
+ */
+
+export function useListCashierSessions<TData = Awaited<ReturnType<typeof listCashierSessions>>, TError = ErrorType<unknown>>(
+ params?: ListCashierSessionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCashierSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCashierSessionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getOpenCashierSessionUrl = () => {
+
+
+
+
+  return `/api/pos/sessions`
+}
+
+/**
+ * @summary Open a cashier shift session
+ */
+export const openCashierSession = async (openSessionInput: OpenSessionInput, options?: RequestInit): Promise<CashierSession> => {
+
+  return customFetch<CashierSession>(getOpenCashierSessionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      openSessionInput,)
+  }
+);}
+
+
+
+
+export const getOpenCashierSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openCashierSession>>, TError,{data: BodyType<OpenSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof openCashierSession>>, TError,{data: BodyType<OpenSessionInput>}, TContext> => {
+
+const mutationKey = ['openCashierSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof openCashierSession>>, {data: BodyType<OpenSessionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  openCashierSession(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OpenCashierSessionMutationResult = NonNullable<Awaited<ReturnType<typeof openCashierSession>>>
+    export type OpenCashierSessionMutationBody = BodyType<OpenSessionInput>
+    export type OpenCashierSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Open a cashier shift session
+ */
+export const useOpenCashierSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openCashierSession>>, TError,{data: BodyType<OpenSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof openCashierSession>>,
+        TError,
+        {data: BodyType<OpenSessionInput>},
+        TContext
+      > => {
+      return useMutation(getOpenCashierSessionMutationOptions(options));
+    }
+
+export const getGetActiveSessionUrl = () => {
+
+
+
+
+  return `/api/pos/sessions/active`
+}
+
+/**
+ * @summary Get current cashier's active session
+ */
+export const getActiveSession = async ( options?: RequestInit): Promise<CashierSession> => {
+
+  return customFetch<CashierSession>(getGetActiveSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetActiveSessionQueryKey = () => {
+    return [
+    `/api/pos/sessions/active`
+    ] as const;
+    }
+
+
+export const getGetActiveSessionQueryOptions = <TData = Awaited<ReturnType<typeof getActiveSession>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActiveSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveSession>>> = ({ signal }) => getActiveSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetActiveSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveSession>>>
+export type GetActiveSessionQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get current cashier's active session
+ */
+
+export function useGetActiveSession<TData = Awaited<ReturnType<typeof getActiveSession>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetActiveSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCloseCashierSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/sessions/${id}/close`
+}
+
+/**
+ * @summary Close a cashier shift session
+ */
+export const closeCashierSession = async (id: number,
+    closeSessionInput: CloseSessionInput, options?: RequestInit): Promise<CashierSession> => {
+
+  return customFetch<CashierSession>(getCloseCashierSessionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      closeSessionInput,)
+  }
+);}
+
+
+
+
+export const getCloseCashierSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeCashierSession>>, TError,{id: number;data: BodyType<CloseSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeCashierSession>>, TError,{id: number;data: BodyType<CloseSessionInput>}, TContext> => {
+
+const mutationKey = ['closeCashierSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeCashierSession>>, {id: number;data: BodyType<CloseSessionInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  closeCashierSession(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseCashierSessionMutationResult = NonNullable<Awaited<ReturnType<typeof closeCashierSession>>>
+    export type CloseCashierSessionMutationBody = BodyType<CloseSessionInput>
+    export type CloseCashierSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Close a cashier shift session
+ */
+export const useCloseCashierSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeCashierSession>>, TError,{id: number;data: BodyType<CloseSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof closeCashierSession>>,
+        TError,
+        {id: number;data: BodyType<CloseSessionInput>},
+        TContext
+      > => {
+      return useMutation(getCloseCashierSessionMutationOptions(options));
+    }
 
 export const getListHeldBillsUrl = () => {
 

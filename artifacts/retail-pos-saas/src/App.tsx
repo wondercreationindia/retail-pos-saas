@@ -18,6 +18,7 @@ import Suppliers from "@/pages/suppliers";
 import Purchases from "@/pages/purchases";
 import Customers from "@/pages/customers";
 import POS from "@/pages/pos";
+import InvoiceHistory from "@/pages/invoice-history";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -31,6 +32,16 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     <AppLayout>
       <Component />
     </AppLayout>
+  );
+}
+
+function FullScreenRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Redirect to="/login" />;
+  return (
+    <div className="h-screen flex flex-col overflow-hidden">
+      <Component />
+    </div>
   );
 }
 
@@ -75,14 +86,11 @@ function Router() {
       <Route path="/customers">
         <ProtectedRoute component={Customers} />
       </Route>
+      <Route path="/pos/invoices">
+        <FullScreenRoute component={InvoiceHistory} />
+      </Route>
       <Route path="/pos">
-        {isAuthenticated ? (
-          <div className="h-screen flex flex-col overflow-hidden">
-            <POS />
-          </div>
-        ) : (
-          <Redirect to="/login" />
-        )}
+        <FullScreenRoute component={POS} />
       </Route>
       <Route path="/">
         {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}

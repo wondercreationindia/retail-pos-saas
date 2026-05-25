@@ -942,6 +942,105 @@ export interface LoyaltyTransaction {
   createdAt: string;
 }
 
+export type EditSaleInputItemsItem = { [key: string]: unknown };
+
+export type EditSaleInputPaymentsItem = { [key: string]: unknown };
+
+export interface EditSaleInput {
+  items?: EditSaleInputItemsItem[];
+  payments?: EditSaleInputPaymentsItem[];
+  discountAmount?: number;
+  /** @nullable */
+  notes?: string | null;
+  reason?: string;
+  /** @nullable */
+  customerId?: number | null;
+  /** @nullable */
+  customerName?: string | null;
+}
+
+export interface VoidSaleInput {
+  reason: string;
+}
+
+export type InvoiceEditBeforeSnapshot = { [key: string]: unknown };
+
+export type InvoiceEditAfterSnapshot = { [key: string]: unknown };
+
+export interface InvoiceEdit {
+  id: number;
+  saleId: number;
+  /** @nullable */
+  editedBy?: number | null;
+  reason: string;
+  beforeSnapshot?: InvoiceEditBeforeSnapshot;
+  afterSnapshot?: InvoiceEditAfterSnapshot;
+  createdAt: string;
+}
+
+export type PrintLogInputPrintType = typeof PrintLogInputPrintType[keyof typeof PrintLogInputPrintType];
+
+
+export const PrintLogInputPrintType = {
+  thermal: 'thermal',
+  a4: 'a4',
+  gst: 'gst',
+} as const;
+
+export interface PrintLogInput {
+  printType: PrintLogInputPrintType;
+  isDuplicate?: boolean;
+}
+
+export interface PrintLog {
+  id: number;
+  saleId: number;
+  printType: string;
+  isDuplicate?: number;
+  createdAt: string;
+}
+
+export interface WhatsappLogInput {
+  phone: string;
+}
+
+export interface WhatsappLog {
+  id: number;
+  saleId: number;
+  phone: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface OpenSessionInput {
+  openingCash: number;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface CloseSessionInput {
+  closingCash: number;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface CashierSession {
+  id: number;
+  tenantId: number;
+  cashierId: number;
+  openingCash: number;
+  /** @nullable */
+  closingCash?: number | null;
+  /** @nullable */
+  expectedCash?: number | null;
+  status: string;
+  /** @nullable */
+  notes?: string | null;
+  openedAt: string;
+  /** @nullable */
+  closedAt?: string | null;
+}
+
 export type ListProductsParams = {
 categoryId?: number;
 search?: string;
@@ -997,4 +1096,16 @@ customerId?: number;
 dateFrom?: string;
 dateTo?: string;
 };
+
+export type ListCashierSessionsParams = {
+status?: ListCashierSessionsStatus;
+};
+
+export type ListCashierSessionsStatus = typeof ListCashierSessionsStatus[keyof typeof ListCashierSessionsStatus];
+
+
+export const ListCashierSessionsStatus = {
+  open: 'open',
+  closed: 'closed',
+} as const;
 

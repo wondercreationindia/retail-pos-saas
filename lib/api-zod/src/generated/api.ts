@@ -1360,6 +1360,254 @@ export const GetSaleResponse = zod.object({
 
 
 /**
+ * @summary Edit a completed sale (manager only, creates audit log)
+ */
+export const EditSaleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const EditSaleBody = zod.object({
+  "items": zod.array(zod.object({
+
+}).passthrough()).optional(),
+  "payments": zod.array(zod.object({
+
+}).passthrough()).optional(),
+  "discountAmount": zod.number().optional(),
+  "notes": zod.string().nullish(),
+  "reason": zod.string().optional(),
+  "customerId": zod.number().nullish(),
+  "customerName": zod.string().nullish()
+})
+
+export const EditSaleResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "saleNumber": zod.string(),
+  "customerId": zod.number().nullish(),
+  "customerName": zod.string().nullish(),
+  "cashierId": zod.number().nullish(),
+  "status": zod.string(),
+  "subtotal": zod.number(),
+  "discountAmount": zod.number(),
+  "taxAmount": zod.number(),
+  "total": zod.number(),
+  "paidAmount": zod.number(),
+  "changeAmount": zod.number(),
+  "paymentStatus": zod.string(),
+  "notes": zod.string().nullish(),
+  "loyaltyPointsEarned": zod.number().optional(),
+  "loyaltyPointsRedeemed": zod.number().optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "productId": zod.number().nullish(),
+  "productName": zod.string(),
+  "sku": zod.string().nullish(),
+  "barcode": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "mrp": zod.number().nullish(),
+  "discountPct": zod.number().optional(),
+  "discountAmount": zod.number().optional(),
+  "gstRate": zod.number().optional(),
+  "gstAmount": zod.number().optional(),
+  "subtotal": zod.number(),
+  "total": zod.number()
+})).optional(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "method": zod.string(),
+  "amount": zod.number(),
+  "reference": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})).optional(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Void or cancel a sale (manager only, restores inventory)
+ */
+export const VoidSaleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const VoidSaleBody = zod.object({
+  "reason": zod.string()
+})
+
+export const VoidSaleResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "saleNumber": zod.string(),
+  "customerId": zod.number().nullish(),
+  "customerName": zod.string().nullish(),
+  "cashierId": zod.number().nullish(),
+  "status": zod.string(),
+  "subtotal": zod.number(),
+  "discountAmount": zod.number(),
+  "taxAmount": zod.number(),
+  "total": zod.number(),
+  "paidAmount": zod.number(),
+  "changeAmount": zod.number(),
+  "paymentStatus": zod.string(),
+  "notes": zod.string().nullish(),
+  "loyaltyPointsEarned": zod.number().optional(),
+  "loyaltyPointsRedeemed": zod.number().optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "productId": zod.number().nullish(),
+  "productName": zod.string(),
+  "sku": zod.string().nullish(),
+  "barcode": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "mrp": zod.number().nullish(),
+  "discountPct": zod.number().optional(),
+  "discountAmount": zod.number().optional(),
+  "gstRate": zod.number().optional(),
+  "gstAmount": zod.number().optional(),
+  "subtotal": zod.number(),
+  "total": zod.number()
+})).optional(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "method": zod.string(),
+  "amount": zod.number(),
+  "reference": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})).optional(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Log a print action for a sale
+ */
+export const LogSalePrintParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const LogSalePrintBody = zod.object({
+  "printType": zod.enum(['thermal', 'a4', 'gst']),
+  "isDuplicate": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Log a WhatsApp share action for a sale
+ */
+export const LogSaleWhatsappParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const LogSaleWhatsappBody = zod.object({
+  "phone": zod.string()
+})
+
+
+/**
+ * @summary Get audit log of edits for a sale
+ */
+export const GetSaleEditsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetSaleEditsResponseItem = zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "editedBy": zod.number().nullish(),
+  "reason": zod.string(),
+  "beforeSnapshot": zod.object({
+
+}).passthrough().optional(),
+  "afterSnapshot": zod.object({
+
+}).passthrough().optional(),
+  "createdAt": zod.coerce.date()
+})
+export const GetSaleEditsResponse = zod.array(GetSaleEditsResponseItem)
+
+
+/**
+ * @summary List cashier sessions
+ */
+export const ListCashierSessionsQueryParams = zod.object({
+  "status": zod.enum(['open', 'closed']).optional()
+})
+
+export const ListCashierSessionsResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "cashierId": zod.number(),
+  "openingCash": zod.number(),
+  "closingCash": zod.number().nullish(),
+  "expectedCash": zod.number().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "openedAt": zod.coerce.date(),
+  "closedAt": zod.coerce.date().nullish()
+})
+export const ListCashierSessionsResponse = zod.array(ListCashierSessionsResponseItem)
+
+
+/**
+ * @summary Open a cashier shift session
+ */
+export const OpenCashierSessionBody = zod.object({
+  "openingCash": zod.number(),
+  "notes": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get current cashier's active session
+ */
+export const GetActiveSessionResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "cashierId": zod.number(),
+  "openingCash": zod.number(),
+  "closingCash": zod.number().nullish(),
+  "expectedCash": zod.number().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "openedAt": zod.coerce.date(),
+  "closedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Close a cashier shift session
+ */
+export const CloseCashierSessionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CloseCashierSessionBody = zod.object({
+  "closingCash": zod.number(),
+  "notes": zod.string().nullish()
+})
+
+export const CloseCashierSessionResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "cashierId": zod.number(),
+  "openingCash": zod.number(),
+  "closingCash": zod.number().nullish(),
+  "expectedCash": zod.number().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "openedAt": zod.coerce.date(),
+  "closedAt": zod.coerce.date().nullish()
+})
+
+
+/**
  * @summary List held bills
  */
 export const ListHeldBillsResponseItem = zod.object({

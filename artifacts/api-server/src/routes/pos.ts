@@ -10,6 +10,10 @@ import {
   customersTable,
   couponsTable,
   loyaltyTransactionsTable,
+  invoiceEditsTable,
+  invoicePrintLogsTable,
+  whatsappInvoiceLogsTable,
+  cashierSessionsTable,
 } from "@workspace/db";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 
@@ -71,11 +75,14 @@ router.get("/pos/sales", requireAuth, async (req, res) => {
   const customerId = qs(req.query.customerId);
   const dateFrom = qs(req.query.dateFrom);
   const dateTo = qs(req.query.dateTo);
+  const search = qs(req.query.search);
+  const status = qs(req.query.status);
 
   const conditions: ReturnType<typeof eq>[] = [eq(salesTable.tenantId, tenantId)];
   if (customerId) conditions.push(eq(salesTable.customerId, parseInt(customerId)));
   if (dateFrom) conditions.push(gte(salesTable.createdAt, new Date(dateFrom)));
   if (dateTo) conditions.push(lte(salesTable.createdAt, new Date(dateTo + "T23:59:59")));
+  if (status) conditions.push(eq(salesTable.status, status));
 
   const sales = await db
     .select()
@@ -85,7 +92,17 @@ router.get("/pos/sales", requireAuth, async (req, res) => {
     .limit(parseInt(limit))
     .offset(parseInt(offset));
 
-  const saleIds = sales.map((s) => s.id);
+  let filtered = sales;
+  if (search) {
+    const q = search.toLowerCase();
+    filtered = sales.filter(
+      (s) =>
+        s.saleNumber.toLowerCase().includes(q) ||
+        (s.customerName ?? "").toLowerCase().includes(q)
+    );
+  }
+
+  const saleIds = filtered.map((s) => s.id);
   if (saleIds.length === 0) return res.json([]);
 
   const [allItems, allPayments] = await Promise.all([
@@ -105,7 +122,7 @@ router.get("/pos/sales", requireAuth, async (req, res) => {
   }
 
   return res.json(
-    sales.map((s) =>
+    filtered.map((s) =>
       formatSale(s, itemsMap.get(s.id) ?? [], paymentsMap.get(s.id) ?? [])
     )
   );
@@ -128,6 +145,248 @@ router.get("/pos/sales/:id", requireAuth, async (req, res) => {
   ]);
 
   return res.json(formatSale(sale, items, payments));
+});
+
+// ─── EDIT SALE ────────────────────────────────────────────────────────────────
+router.patch("/pos/sales/:id", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const userId = req.user!.userId;
+  const id = parseInt(qs(req.params.id));
+  const { items, payments, discountAmount, notes, reason, customerId, customerName } = req.body as {
+    items?: Record<string, unknown>[];
+    payments?: Record<string, unknown>[];
+    discountAmount?: number;
+    notes?: string;
+    reason?: string;
+    customerId?: number | null;
+    customerName?: string | null;
+  };
+
+  const [sale] = await db
+    .select()
+    .from(salesTable)
+    .where(and(eq(salesTable.id, id), eq(salesTable.tenantId, tenantId)));
+  if (!sale) return res.status(404).json({ error: "Sale not found" });
+  if (sale.status === "voided") return res.status(400).json({ error: "Cannot edit a voided sale" });
+
+  const [oldItems, oldPayments] = await Promise.all([
+    db.select().from(saleItemsTable).where(eq(saleItemsTable.saleId, id)),
+    db.select().from(paymentsTable).where(eq(paymentsTable.saleId, id)),
+  ]);
+
+  const beforeSnapshot = formatSale(sale, oldItems, oldPayments);
+
+  // Restore stock for old items
+  for (const item of oldItems) {
+    if (item.productId) {
+      await db
+        .update(productsTable)
+        .set({ stock: sql`${productsTable.stock} + ${numStr(item.quantity)}`, updatedAt: new Date() })
+        .where(and(eq(productsTable.id, item.productId), eq(productsTable.tenantId, tenantId)));
+    }
+  }
+
+  // Delete old items and payments
+  await db.delete(saleItemsTable).where(eq(saleItemsTable.saleId, id));
+  await db.delete(paymentsTable).where(eq(paymentsTable.saleId, id));
+
+  // Recalculate totals
+  type AnyItem = Record<string, unknown>;
+  const newItems: AnyItem[] = items ?? oldItems.map((i) => ({ ...i, quantity: numStr(i.quantity), unitPrice: numStr(i.unitPrice), subtotal: numStr(i.subtotal), total: numStr(i.total) }));
+  const subtotal = newItems.reduce((s: number, i: AnyItem) => s + numStr(i.subtotal ?? i.total), 0);
+  const newDiscount = discountAmount ?? numStr(sale.discountAmount);
+  const taxAmount = newItems.reduce((s: number, i: AnyItem) => s + numStr(i.gstAmount), 0);
+  const total = Math.max(0, subtotal - newDiscount + taxAmount);
+  const paidAmount = (payments ?? []).reduce((s: number, p: Record<string, unknown>) => s + numStr(p.amount), 0) || total;
+
+  // Update sale
+  const [updatedSale] = await db
+    .update(salesTable)
+    .set({
+      discountAmount: newDiscount.toString(),
+      subtotal: subtotal.toString(),
+      taxAmount: taxAmount.toString(),
+      total: total.toString(),
+      paidAmount: paidAmount.toString(),
+      changeAmount: Math.max(0, paidAmount - total).toString(),
+      notes: notes ?? sale.notes,
+      customerId: customerId !== undefined ? customerId : sale.customerId,
+      customerName: customerName !== undefined ? customerName : sale.customerName,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(salesTable.id, id), eq(salesTable.tenantId, tenantId)))
+    .returning();
+
+  // Re-insert items
+  const insertedItems =
+    newItems.length > 0
+      ? await db
+          .insert(saleItemsTable)
+          .values(
+            newItems.map((item: Record<string, unknown>) => ({
+              tenantId,
+              saleId: id,
+              productId: (item.productId as number) ?? null,
+              productName: String(item.productName),
+              sku: item.sku ? String(item.sku) : null,
+              barcode: item.barcode ? String(item.barcode) : null,
+              quantity: String(item.quantity),
+              unitPrice: String(item.unitPrice),
+              mrp: item.mrp ? String(item.mrp) : null,
+              discountPct: String(item.discountPct ?? 0),
+              discountAmount: String(item.discountAmount ?? 0),
+              gstRate: String(item.gstRate ?? 0),
+              gstAmount: String(item.gstAmount ?? 0),
+              subtotal: String(item.subtotal),
+              total: String(item.total),
+            }))
+          )
+          .returning()
+      : [];
+
+  // Re-insert payments
+  const newPayments = payments ?? [{ method: "cash", amount: paidAmount }];
+  const insertedPayments = await db
+    .insert(paymentsTable)
+    .values(
+      newPayments.map((p: Record<string, unknown>) => ({
+        tenantId,
+        saleId: id,
+        method: String(p.method),
+        amount: String(p.amount),
+        reference: p.reference ? String(p.reference) : null,
+      }))
+    )
+    .returning();
+
+  // Deduct stock for new items
+  for (const item of newItems) {
+    if ((item as Record<string, unknown>).productId) {
+      await db
+        .update(productsTable)
+        .set({ stock: sql`${productsTable.stock} - ${numStr((item as Record<string, unknown>).quantity)}`, updatedAt: new Date() })
+        .where(and(eq(productsTable.id, (item as Record<string, unknown>).productId as number), eq(productsTable.tenantId, tenantId)));
+    }
+  }
+
+  // Write audit log
+  await db.insert(invoiceEditsTable).values({
+    tenantId,
+    saleId: id,
+    editedBy: userId,
+    reason: reason ?? "Manual edit",
+    beforeSnapshot,
+    afterSnapshot: formatSale(updatedSale!, insertedItems, insertedPayments),
+  });
+
+  return res.json(formatSale(updatedSale!, insertedItems, insertedPayments));
+});
+
+// ─── VOID SALE ────────────────────────────────────────────────────────────────
+router.post("/pos/sales/:id/void", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const userId = req.user!.userId;
+  const id = parseInt(qs(req.params.id));
+  const { reason } = req.body as { reason: string };
+
+  if (!reason) return res.status(400).json({ error: "Reason is required" });
+
+  const [sale] = await db
+    .select()
+    .from(salesTable)
+    .where(and(eq(salesTable.id, id), eq(salesTable.tenantId, tenantId)));
+  if (!sale) return res.status(404).json({ error: "Sale not found" });
+  if (sale.status === "voided") return res.status(400).json({ error: "Sale is already voided" });
+
+  const oldItems = await db.select().from(saleItemsTable).where(eq(saleItemsTable.saleId, id));
+  const oldPayments = await db.select().from(paymentsTable).where(eq(paymentsTable.saleId, id));
+  const beforeSnapshot = formatSale(sale, oldItems, oldPayments);
+
+  // Restore stock
+  for (const item of oldItems) {
+    if (item.productId) {
+      await db
+        .update(productsTable)
+        .set({ stock: sql`${productsTable.stock} + ${numStr(item.quantity)}`, updatedAt: new Date() })
+        .where(and(eq(productsTable.id, item.productId), eq(productsTable.tenantId, tenantId)));
+    }
+  }
+
+  // Reverse loyalty points
+  if (sale.customerId && (sale.loyaltyPointsEarned > 0 || sale.loyaltyPointsRedeemed > 0)) {
+    await db
+      .update(customersTable)
+      .set({
+        loyaltyPoints: sql`${customersTable.loyaltyPoints} - ${sale.loyaltyPointsEarned} + ${sale.loyaltyPointsRedeemed}`,
+        totalPurchases: sql`${customersTable.totalPurchases} - ${numStr(sale.total)}`,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(customersTable.id, sale.customerId), eq(customersTable.tenantId, tenantId)));
+  }
+
+  const [updatedSale] = await db
+    .update(salesTable)
+    .set({ status: "voided", paymentStatus: "voided", updatedAt: new Date() })
+    .where(and(eq(salesTable.id, id), eq(salesTable.tenantId, tenantId)))
+    .returning();
+
+  // Audit log for void
+  await db.insert(invoiceEditsTable).values({
+    tenantId,
+    saleId: id,
+    editedBy: userId,
+    reason: `VOID: ${reason}`,
+    beforeSnapshot,
+    afterSnapshot: { ...beforeSnapshot, status: "voided" },
+  });
+
+  return res.json(formatSale(updatedSale!, oldItems, oldPayments));
+});
+
+// ─── LOG PRINT ─────────────────────────────────────────────────────────────────
+router.post("/pos/sales/:id/print", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const userId = req.user!.userId;
+  const id = parseInt(qs(req.params.id));
+  const { printType = "thermal", isDuplicate = false } = req.body as { printType?: string; isDuplicate?: boolean };
+
+  const [log] = await db
+    .insert(invoicePrintLogsTable)
+    .values({ tenantId, saleId: id, printedBy: userId, printType, isDuplicate: isDuplicate ? 1 : 0 })
+    .returning();
+
+  return res.status(201).json(log);
+});
+
+// ─── LOG WHATSAPP ──────────────────────────────────────────────────────────────
+router.post("/pos/sales/:id/whatsapp", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const userId = req.user!.userId;
+  const id = parseInt(qs(req.params.id));
+  const { phone } = req.body as { phone: string };
+
+  if (!phone) return res.status(400).json({ error: "Phone is required" });
+
+  const [log] = await db
+    .insert(whatsappInvoiceLogsTable)
+    .values({ tenantId, saleId: id, sentBy: userId, phone, status: "sent" })
+    .returning();
+
+  return res.status(201).json(log);
+});
+
+// ─── GET SALE EDITS ────────────────────────────────────────────────────────────
+router.get("/pos/sales/:id/edits", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const id = parseInt(qs(req.params.id));
+
+  const edits = await db
+    .select()
+    .from(invoiceEditsTable)
+    .where(and(eq(invoiceEditsTable.saleId, id), eq(invoiceEditsTable.tenantId, tenantId)))
+    .orderBy(desc(invoiceEditsTable.createdAt));
+
+  return res.json(edits);
 });
 
 // ─── CREATE SALE ──────────────────────────────────────────────────────────────
@@ -249,7 +508,6 @@ router.post("/pos/sales", requireAuth, async (req, res) => {
       )
       .returning();
 
-    // Record loyalty transactions
     if (loyaltyPointsEarned > 0) {
       await db.insert(loyaltyTransactionsTable).values({
         tenantId,
@@ -322,6 +580,138 @@ router.delete("/pos/held-bills/:id", requireAuth, async (req, res) => {
     .delete(heldBillsTable)
     .where(and(eq(heldBillsTable.id, id), eq(heldBillsTable.tenantId, tenantId)));
   res.status(204).end();
+});
+
+// ─── CASHIER SESSIONS ─────────────────────────────────────────────────────────
+router.get("/pos/sessions", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const status = qs(req.query.status);
+
+  const conditions: ReturnType<typeof eq>[] = [eq(cashierSessionsTable.tenantId, tenantId)];
+  if (status) conditions.push(eq(cashierSessionsTable.status, status));
+
+  const sessions = await db
+    .select()
+    .from(cashierSessionsTable)
+    .where(and(...conditions))
+    .orderBy(desc(cashierSessionsTable.openedAt))
+    .limit(50);
+
+  return res.json(
+    sessions.map((s) => ({
+      ...s,
+      openingCash: numStr(s.openingCash),
+      closingCash: s.closingCash ? numStr(s.closingCash) : null,
+      expectedCash: s.expectedCash ? numStr(s.expectedCash) : null,
+    }))
+  );
+});
+
+router.get("/pos/sessions/active", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const cashierId = req.user!.userId;
+
+  const [session] = await db
+    .select()
+    .from(cashierSessionsTable)
+    .where(
+      and(
+        eq(cashierSessionsTable.tenantId, tenantId),
+        eq(cashierSessionsTable.cashierId, cashierId),
+        eq(cashierSessionsTable.status, "open")
+      )
+    )
+    .orderBy(desc(cashierSessionsTable.openedAt))
+    .limit(1);
+
+  return res.json(
+    session
+      ? {
+          ...session,
+          openingCash: numStr(session.openingCash),
+          closingCash: session.closingCash ? numStr(session.closingCash) : null,
+          expectedCash: session.expectedCash ? numStr(session.expectedCash) : null,
+        }
+      : null
+  );
+});
+
+router.post("/pos/sessions", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const cashierId = req.user!.userId;
+  const { openingCash = 0, notes } = req.body as { openingCash?: number; notes?: string };
+
+  // Close any existing open session for this cashier first
+  await db
+    .update(cashierSessionsTable)
+    .set({ status: "closed", closedAt: new Date() })
+    .where(
+      and(
+        eq(cashierSessionsTable.tenantId, tenantId),
+        eq(cashierSessionsTable.cashierId, cashierId),
+        eq(cashierSessionsTable.status, "open")
+      )
+    );
+
+  const [session] = await db
+    .insert(cashierSessionsTable)
+    .values({ tenantId, cashierId, openingCash: openingCash.toString(), notes: notes ?? null })
+    .returning();
+
+  return res.status(201).json({
+    ...session,
+    openingCash: numStr(session.openingCash),
+    closingCash: null,
+    expectedCash: null,
+  });
+});
+
+router.patch("/pos/sessions/:id/close", requireAuth, async (req, res) => {
+  const tenantId = req.user!.tenantId;
+  const id = parseInt(qs(req.params.id));
+  const { closingCash = 0, notes } = req.body as { closingCash?: number; notes?: string };
+
+  const [session] = await db
+    .select()
+    .from(cashierSessionsTable)
+    .where(and(eq(cashierSessionsTable.id, id), eq(cashierSessionsTable.tenantId, tenantId)));
+  if (!session) return res.status(404).json({ error: "Session not found" });
+
+  // Calculate expected cash (opening + cash sales)
+  const [cashSalesRow] = await db
+    .select({ total: sql<string>`COALESCE(SUM(${paymentsTable.amount}::numeric), 0)` })
+    .from(paymentsTable)
+    .innerJoin(salesTable, eq(salesTable.id, paymentsTable.saleId))
+    .where(
+      and(
+        eq(paymentsTable.tenantId, tenantId),
+        eq(paymentsTable.method, "cash"),
+        eq(salesTable.cashierId, session.cashierId),
+        gte(salesTable.createdAt, session.openedAt)
+      )
+    );
+
+  const cashSales = numStr(cashSalesRow?.total);
+  const expectedCash = numStr(session.openingCash) + cashSales;
+
+  const [updated] = await db
+    .update(cashierSessionsTable)
+    .set({
+      status: "closed",
+      closingCash: closingCash.toString(),
+      expectedCash: expectedCash.toString(),
+      closedAt: new Date(),
+      notes: notes ?? session.notes,
+    })
+    .where(and(eq(cashierSessionsTable.id, id), eq(cashierSessionsTable.tenantId, tenantId)))
+    .returning();
+
+  return res.json({
+    ...updated,
+    openingCash: numStr(updated!.openingCash),
+    closingCash: numStr(updated!.closingCash),
+    expectedCash: numStr(updated!.expectedCash),
+  });
 });
 
 // ─── COUPON VALIDATE ──────────────────────────────────────────────────────────
