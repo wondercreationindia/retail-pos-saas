@@ -38,10 +38,11 @@ type Product = {
   name: string;
   sku?: string | null;
   barcode?: string | null;
+  price?: number | null;
   salePrice?: number | null;
   mrp?: number | null;
   gstRate?: number | null;
-  stockQuantity?: number | null;
+  stock?: number | null;
   categoryId?: number | null;
 };
 
@@ -330,7 +331,7 @@ export default function POS() {
   }, []);
 
   const addToCart = useCallback((product: Product) => {
-    const unitPrice = product.salePrice ?? 0;
+    const unitPrice = product.salePrice ?? product.price ?? 0;
     const gstRate = product.gstRate ?? 0;
     setCart((prev) => {
       const existing = prev.findIndex((i) => i.productId === product.id);
@@ -491,9 +492,9 @@ export default function POS() {
                   <div className="font-medium text-sm leading-tight line-clamp-2">{product.name}</div>
                   {product.sku && <div className="text-xs text-muted-foreground mt-0.5">{product.sku}</div>}
                   <div className="flex justify-between items-center mt-2">
-                    <span className="font-bold text-primary">₹{(product.salePrice ?? 0).toFixed(2)}</span>
-                    <span className={`text-xs ${(product.stockQuantity ?? 0) < 5 ? "text-red-500" : "text-muted-foreground"}`}>
-                      Qty: {product.stockQuantity ?? 0}
+                    <span className="font-bold text-primary">₹{(product.salePrice ?? product.price ?? 0).toFixed(2)}</span>
+                    <span className={`text-xs ${(product.stock ?? 0) < 5 ? "text-red-500" : "text-muted-foreground"}`}>
+                      Qty: {product.stock ?? 0}
                     </span>
                   </div>
                   {product.gstRate && parseFloat(String(product.gstRate)) > 0 && (
