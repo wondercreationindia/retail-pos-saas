@@ -5,14 +5,41 @@
  * Retail POS SaaS API
  * OpenAPI spec version: 0.1.0
  */
+import type { ProductInputStatus } from './productInputStatus';
 
 export interface ProductInput {
   name: string;
   description?: string;
   sku?: string;
+  barcode?: string;
+  hsnCode?: string;
+  brand?: string;
+  unit?: string;
+  weight?: number;
+  size?: string;
+  color?: string;
   price: number;
+  salePrice?: number;
+  mrp?: number;
+  purchasePrice?: number;
+  costPrice?: number;
+  gstRate?: number;
   stock: number;
+  minStockAlert?: number;
+  maxStock?: number;
+  trackInventory?: boolean;
+  allowNegativeStock?: boolean;
   /** @nullable */
   categoryId?: number | null;
   imageUrl?: string;
+  slug?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  publishOnline?: boolean;
+  featuredProduct?: boolean;
+  barcodeType?: string;
+  labelWidth?: number;
+  labelHeight?: number;
+  status?: ProductInputStatus;
+  supplierId?: number;
 }

@@ -727,7 +727,7 @@ components:
 
     Product:
       type: object
-      required: [id, tenantId, name, price, stock, isActive, createdAt]
+      required: [id, tenantId, name, price, stock, isActive, status, createdAt, updatedAt]
       properties:
         id:
           type: integer
@@ -739,18 +739,89 @@ components:
           type: ["string", "null"]
         sku:
           type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        hsnCode:
+          type: ["string", "null"]
+        brand:
+          type: ["string", "null"]
+        unit:
+          type: ["string", "null"]
+        weight:
+          type: ["number", "null"]
+          format: float
+        size:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
         price:
           type: number
           format: float
+        salePrice:
+          type: ["number", "null"]
+          format: float
+        mrp:
+          type: ["number", "null"]
+          format: float
+        purchasePrice:
+          type: ["number", "null"]
+          format: float
+        costPrice:
+          type: ["number", "null"]
+          format: float
+        gstRate:
+          type: ["number", "null"]
+          format: float
         stock:
           type: integer
+        minStockAlert:
+          type: ["integer", "null"]
+        maxStock:
+          type: ["integer", "null"]
+        trackInventory:
+          type: boolean
+        allowNegativeStock:
+          type: boolean
         categoryId:
           type: ["integer", "null"]
         imageUrl:
           type: ["string", "null"]
+        slug:
+          type: ["string", "null"]
+        seoTitle:
+          type: ["string", "null"]
+        seoDescription:
+          type: ["string", "null"]
+        publishOnline:
+          type: boolean
+        featuredProduct:
+          type: boolean
+        barcodeType:
+          type: ["string", "null"]
+        labelWidth:
+          type: ["number", "null"]
+          format: float
+        labelHeight:
+          type: ["number", "null"]
+          format: float
         isActive:
           type: boolean
+        status:
+          type: string
+          enum: [active, inactive, discontinued]
+        supplierId:
+          type: ["integer", "null"]
+        createdBy:
+          type: ["integer", "null"]
+        updatedBy:
+          type: ["integer", "null"]
+        deletedAt:
+          type: ["string", "null"]
+          format: date-time
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
 
@@ -764,15 +835,76 @@ components:
           type: string
         sku:
           type: string
+        barcode:
+          type: string
+        hsnCode:
+          type: string
+        brand:
+          type: string
+        unit:
+          type: string
+        weight:
+          type: number
+          format: float
+        size:
+          type: string
+        color:
+          type: string
         price:
+          type: number
+          format: float
+        salePrice:
+          type: number
+          format: float
+        mrp:
+          type: number
+          format: float
+        purchasePrice:
+          type: number
+          format: float
+        costPrice:
+          type: number
+          format: float
+        gstRate:
           type: number
           format: float
         stock:
           type: integer
+        minStockAlert:
+          type: integer
+        maxStock:
+          type: integer
+        trackInventory:
+          type: boolean
+        allowNegativeStock:
+          type: boolean
         categoryId:
           type: ["integer", "null"]
         imageUrl:
           type: string
+        slug:
+          type: string
+        seoTitle:
+          type: string
+        seoDescription:
+          type: string
+        publishOnline:
+          type: boolean
+        featuredProduct:
+          type: boolean
+        barcodeType:
+          type: string
+        labelWidth:
+          type: number
+          format: float
+        labelHeight:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [active, inactive, discontinued]
+        supplierId:
+          type: integer
 
     ProductUpdate:
       type: object
@@ -783,17 +915,78 @@ components:
           type: ["string", "null"]
         sku:
           type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        hsnCode:
+          type: ["string", "null"]
+        brand:
+          type: ["string", "null"]
+        unit:
+          type: ["string", "null"]
+        weight:
+          type: ["number", "null"]
+          format: float
+        size:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
         price:
           type: number
           format: float
+        salePrice:
+          type: ["number", "null"]
+          format: float
+        mrp:
+          type: ["number", "null"]
+          format: float
+        purchasePrice:
+          type: ["number", "null"]
+          format: float
+        costPrice:
+          type: ["number", "null"]
+          format: float
+        gstRate:
+          type: ["number", "null"]
+          format: float
         stock:
           type: integer
+        minStockAlert:
+          type: ["integer", "null"]
+        maxStock:
+          type: ["integer", "null"]
+        trackInventory:
+          type: boolean
+        allowNegativeStock:
+          type: boolean
         categoryId:
           type: ["integer", "null"]
         imageUrl:
           type: ["string", "null"]
+        slug:
+          type: ["string", "null"]
+        seoTitle:
+          type: ["string", "null"]
+        seoDescription:
+          type: ["string", "null"]
+        publishOnline:
+          type: boolean
+        featuredProduct:
+          type: boolean
+        barcodeType:
+          type: ["string", "null"]
+        labelWidth:
+          type: ["number", "null"]
+          format: float
+        labelHeight:
+          type: ["number", "null"]
+          format: float
         isActive:
           type: boolean
+        status:
+          type: string
+          enum: [active, inactive, discontinued]
+        supplierId:
+          type: ["integer", "null"]
 
     OrderItem:
       type: object

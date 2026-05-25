@@ -5,6 +5,7 @@
  * Retail POS SaaS API
  * OpenAPI spec version: 0.1.0
  */
+import type { ProductStatus } from './productStatus';
 
 export interface Product {
   id: number;
@@ -14,12 +15,66 @@ export interface Product {
   description?: string | null;
   /** @nullable */
   sku?: string | null;
+  /** @nullable */
+  barcode?: string | null;
+  /** @nullable */
+  hsnCode?: string | null;
+  /** @nullable */
+  brand?: string | null;
+  /** @nullable */
+  unit?: string | null;
+  /** @nullable */
+  weight?: number | null;
+  /** @nullable */
+  size?: string | null;
+  /** @nullable */
+  color?: string | null;
   price: number;
+  /** @nullable */
+  salePrice?: number | null;
+  /** @nullable */
+  mrp?: number | null;
+  /** @nullable */
+  purchasePrice?: number | null;
+  /** @nullable */
+  costPrice?: number | null;
+  /** @nullable */
+  gstRate?: number | null;
   stock: number;
+  /** @nullable */
+  minStockAlert?: number | null;
+  /** @nullable */
+  maxStock?: number | null;
+  trackInventory?: boolean;
+  allowNegativeStock?: boolean;
   /** @nullable */
   categoryId?: number | null;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  slug?: string | null;
+  /** @nullable */
+  seoTitle?: string | null;
+  /** @nullable */
+  seoDescription?: string | null;
+  publishOnline?: boolean;
+  featuredProduct?: boolean;
+  /** @nullable */
+  barcodeType?: string | null;
+  /** @nullable */
+  labelWidth?: number | null;
+  /** @nullable */
+  labelHeight?: number | null;
   isActive: boolean;
+  status: ProductStatus;
+  /** @nullable */
+  supplierId?: number | null;
+  /** @nullable */
+  createdBy?: number | null;
+  /** @nullable */
+  updatedBy?: number | null;
+  /** @nullable */
+  deletedAt?: Date | null;
   createdAt: Date;
+  updatedAt: Date;
 }

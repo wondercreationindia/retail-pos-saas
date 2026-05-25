@@ -127,6 +127,15 @@ export interface CategoryUpdate {
   color?: string | null;
 }
 
+export type ProductStatus = typeof ProductStatus[keyof typeof ProductStatus];
+
+
+export const ProductStatus = {
+  active: 'active',
+  inactive: 'inactive',
+  discontinued: 'discontinued',
+} as const;
+
 export interface Product {
   id: number;
   tenantId: number;
@@ -135,26 +144,124 @@ export interface Product {
   description?: string | null;
   /** @nullable */
   sku?: string | null;
+  /** @nullable */
+  barcode?: string | null;
+  /** @nullable */
+  hsnCode?: string | null;
+  /** @nullable */
+  brand?: string | null;
+  /** @nullable */
+  unit?: string | null;
+  /** @nullable */
+  weight?: number | null;
+  /** @nullable */
+  size?: string | null;
+  /** @nullable */
+  color?: string | null;
   price: number;
+  /** @nullable */
+  salePrice?: number | null;
+  /** @nullable */
+  mrp?: number | null;
+  /** @nullable */
+  purchasePrice?: number | null;
+  /** @nullable */
+  costPrice?: number | null;
+  /** @nullable */
+  gstRate?: number | null;
   stock: number;
+  /** @nullable */
+  minStockAlert?: number | null;
+  /** @nullable */
+  maxStock?: number | null;
+  trackInventory?: boolean;
+  allowNegativeStock?: boolean;
   /** @nullable */
   categoryId?: number | null;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  slug?: string | null;
+  /** @nullable */
+  seoTitle?: string | null;
+  /** @nullable */
+  seoDescription?: string | null;
+  publishOnline?: boolean;
+  featuredProduct?: boolean;
+  /** @nullable */
+  barcodeType?: string | null;
+  /** @nullable */
+  labelWidth?: number | null;
+  /** @nullable */
+  labelHeight?: number | null;
   isActive: boolean;
+  status: ProductStatus;
+  /** @nullable */
+  supplierId?: number | null;
+  /** @nullable */
+  createdBy?: number | null;
+  /** @nullable */
+  updatedBy?: number | null;
+  /** @nullable */
+  deletedAt?: string | null;
   createdAt: string;
+  updatedAt: string;
 }
+
+export type ProductInputStatus = typeof ProductInputStatus[keyof typeof ProductInputStatus];
+
+
+export const ProductInputStatus = {
+  active: 'active',
+  inactive: 'inactive',
+  discontinued: 'discontinued',
+} as const;
 
 export interface ProductInput {
   name: string;
   description?: string;
   sku?: string;
+  barcode?: string;
+  hsnCode?: string;
+  brand?: string;
+  unit?: string;
+  weight?: number;
+  size?: string;
+  color?: string;
   price: number;
+  salePrice?: number;
+  mrp?: number;
+  purchasePrice?: number;
+  costPrice?: number;
+  gstRate?: number;
   stock: number;
+  minStockAlert?: number;
+  maxStock?: number;
+  trackInventory?: boolean;
+  allowNegativeStock?: boolean;
   /** @nullable */
   categoryId?: number | null;
   imageUrl?: string;
+  slug?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  publishOnline?: boolean;
+  featuredProduct?: boolean;
+  barcodeType?: string;
+  labelWidth?: number;
+  labelHeight?: number;
+  status?: ProductInputStatus;
+  supplierId?: number;
 }
+
+export type ProductUpdateStatus = typeof ProductUpdateStatus[keyof typeof ProductUpdateStatus];
+
+
+export const ProductUpdateStatus = {
+  active: 'active',
+  inactive: 'inactive',
+  discontinued: 'discontinued',
+} as const;
 
 export interface ProductUpdate {
   name?: string;
@@ -162,13 +269,60 @@ export interface ProductUpdate {
   description?: string | null;
   /** @nullable */
   sku?: string | null;
+  /** @nullable */
+  barcode?: string | null;
+  /** @nullable */
+  hsnCode?: string | null;
+  /** @nullable */
+  brand?: string | null;
+  /** @nullable */
+  unit?: string | null;
+  /** @nullable */
+  weight?: number | null;
+  /** @nullable */
+  size?: string | null;
+  /** @nullable */
+  color?: string | null;
   price?: number;
+  /** @nullable */
+  salePrice?: number | null;
+  /** @nullable */
+  mrp?: number | null;
+  /** @nullable */
+  purchasePrice?: number | null;
+  /** @nullable */
+  costPrice?: number | null;
+  /** @nullable */
+  gstRate?: number | null;
   stock?: number;
+  /** @nullable */
+  minStockAlert?: number | null;
+  /** @nullable */
+  maxStock?: number | null;
+  trackInventory?: boolean;
+  allowNegativeStock?: boolean;
   /** @nullable */
   categoryId?: number | null;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  slug?: string | null;
+  /** @nullable */
+  seoTitle?: string | null;
+  /** @nullable */
+  seoDescription?: string | null;
+  publishOnline?: boolean;
+  featuredProduct?: boolean;
+  /** @nullable */
+  barcodeType?: string | null;
+  /** @nullable */
+  labelWidth?: number | null;
+  /** @nullable */
+  labelHeight?: number | null;
   isActive?: boolean;
+  status?: ProductUpdateStatus;
+  /** @nullable */
+  supplierId?: number | null;
 }
 
 export interface OrderItem {
