@@ -30,6 +30,10 @@ tags:
     description: Inventory management
   - name: purchases
     description: Purchase management
+  - name: customers
+    description: Customer management
+  - name: pos
+    description: POS billing
 
 paths:
   /healthz:
@@ -885,6 +889,215 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TopProduct"
+
+  # ─── CUSTOMERS ───────────────────────────────────────────────────────────────
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List customers
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Customer"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "201":
+          description: Created customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /customers/{id}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Get customer by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    patch:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Update a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    delete:
+      operationId: deleteCustomer
+      tags: [customers]
+      summary: Delete a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── POS SALES ───────────────────────────────────────────────────────────────
+  /pos/sales:
+    get:
+      operationId: listSales
+      tags: [pos]
+      summary: List POS sales
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: customerId
+          schema: { type: integer }
+        - in: query
+          name: dateFrom
+          schema: { type: string, format: date }
+        - in: query
+          name: dateTo
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: List of sales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+    post:
+      operationId: createSale
+      tags: [pos]
+      summary: Create a POS sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaleInput"
+      responses:
+        "201":
+          description: Created sale with items and payments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /pos/sales/{id}:
+    get:
+      operationId: getSale
+      tags: [pos]
+      summary: Get a sale by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Sale with items and payments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  # ─── HELD BILLS ──────────────────────────────────────────────────────────────
+  /pos/held-bills:
+    get:
+      operationId: listHeldBills
+      tags: [pos]
+      summary: List held bills
+      responses:
+        "200":
+          description: Held bills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HeldBill"
+    post:
+      operationId: createHeldBill
+      tags: [pos]
+      summary: Hold a bill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HeldBillInput"
+      responses:
+        "201":
+          description: Held bill created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeldBill"
+
+  /pos/held-bills/{id}:
+    delete:
+      operationId: deleteHeldBill
+      tags: [pos]
+      summary: Delete (resume/discard) a held bill
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
 
 components:
   schemas:
@@ -1898,5 +2111,317 @@ components:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+
+    # ─── CUSTOMER SCHEMAS ─────────────────────────────────────────────────────
+    Customer:
+      type: object
+      required: [id, tenantId, name, isCredit, outstandingDues, loyaltyPoints, totalPurchases, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        gstin:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        pincode:
+          type: ["string", "null"]
+        isCredit:
+          type: boolean
+        creditLimit:
+          type: ["number", "null"]
+          format: float
+        outstandingDues:
+          type: number
+          format: float
+        loyaltyPoints:
+          type: integer
+        totalPurchases:
+          type: number
+          format: float
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    CustomerInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        gstin:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        pincode:
+          type: ["string", "null"]
+        isCredit:
+          type: boolean
+        creditLimit:
+          type: ["number", "null"]
+          format: float
+        notes:
+          type: ["string", "null"]
+
+    # ─── SALE SCHEMAS ─────────────────────────────────────────────────────────
+    SaleItemInput:
+      type: object
+      required: [productName, quantity, unitPrice, subtotal, total]
+      properties:
+        productId:
+          type: ["integer", "null"]
+        productName:
+          type: string
+        sku:
+          type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        quantity:
+          type: number
+          format: float
+        unitPrice:
+          type: number
+          format: float
+        mrp:
+          type: ["number", "null"]
+          format: float
+        discountPct:
+          type: number
+          format: float
+        discountAmount:
+          type: number
+          format: float
+        gstRate:
+          type: number
+          format: float
+        gstAmount:
+          type: number
+          format: float
+        subtotal:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+
+    PaymentInput:
+      type: object
+      required: [method, amount]
+      properties:
+        method:
+          type: string
+          enum: [cash, card, upi, credit]
+        amount:
+          type: number
+          format: float
+        reference:
+          type: ["string", "null"]
+
+    SaleInput:
+      type: object
+      required: [items, payments, subtotal, total]
+      properties:
+        customerId:
+          type: ["integer", "null"]
+        customerName:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItemInput"
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentInput"
+        subtotal:
+          type: number
+          format: float
+        discountAmount:
+          type: number
+          format: float
+        taxAmount:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        paidAmount:
+          type: number
+          format: float
+        changeAmount:
+          type: number
+          format: float
+        loyaltyPointsRedeemed:
+          type: integer
+        notes:
+          type: ["string", "null"]
+
+    SaleItem:
+      type: object
+      required: [id, saleId, productName, quantity, unitPrice, subtotal, total]
+      properties:
+        id:
+          type: integer
+        saleId:
+          type: integer
+        productId:
+          type: ["integer", "null"]
+        productName:
+          type: string
+        sku:
+          type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        quantity:
+          type: number
+          format: float
+        unitPrice:
+          type: number
+          format: float
+        mrp:
+          type: ["number", "null"]
+          format: float
+        discountPct:
+          type: number
+          format: float
+        discountAmount:
+          type: number
+          format: float
+        gstRate:
+          type: number
+          format: float
+        gstAmount:
+          type: number
+          format: float
+        subtotal:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+
+    Payment:
+      type: object
+      required: [id, saleId, method, amount]
+      properties:
+        id:
+          type: integer
+        saleId:
+          type: integer
+        method:
+          type: string
+        amount:
+          type: number
+          format: float
+        reference:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    Sale:
+      type: object
+      required: [id, tenantId, saleNumber, status, subtotal, discountAmount, taxAmount, total, paidAmount, changeAmount, paymentStatus, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        saleNumber:
+          type: string
+        customerId:
+          type: ["integer", "null"]
+        customerName:
+          type: ["string", "null"]
+        cashierId:
+          type: ["integer", "null"]
+        status:
+          type: string
+        subtotal:
+          type: number
+          format: float
+        discountAmount:
+          type: number
+          format: float
+        taxAmount:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        paidAmount:
+          type: number
+          format: float
+        changeAmount:
+          type: number
+          format: float
+        paymentStatus:
+          type: string
+        notes:
+          type: ["string", "null"]
+        loyaltyPointsEarned:
+          type: integer
+        loyaltyPointsRedeemed:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItem"
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── HELD BILL SCHEMAS ────────────────────────────────────────────────────
+    HeldBillInput:
+      type: object
+      required: [cartData]
+      properties:
+        label:
+          type: ["string", "null"]
+        cartData:
+          type: object
+
+    HeldBill:
+      type: object
+      required: [id, tenantId, cartData, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        cashierId:
+          type: ["integer", "null"]
+        label:
+          type: ["string", "null"]
+        cartData:
+          type: object
+        createdAt:
           type: string
           format: date-time

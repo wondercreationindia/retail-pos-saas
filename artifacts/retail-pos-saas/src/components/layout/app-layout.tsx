@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
-import { Home, Package, ShoppingCart, Tags, Users, Settings, LogOut, Warehouse, Truck, ShoppingBag } from "lucide-react";
+import { Home, Package, ShoppingCart, Tags, Users, Settings, LogOut, Warehouse, Truck, ShoppingBag, MonitorSmartphone, UserRound } from "lucide-react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -24,17 +24,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
+                      <Link href="/pos"><MonitorSmartphone /> POS Billing</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
                       <Link href="/dashboard"><Home /> Dashboard</Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/products"><Package /> Products</Link>
+                      <Link href="/orders"><ShoppingCart /> Orders</Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/orders"><ShoppingCart /> Orders</Link>
+                      <Link href="/customers"><UserRound /> Customers</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href="/products"><Package /> Products</Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>

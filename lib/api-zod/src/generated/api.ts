@@ -1076,3 +1076,321 @@ export const GetTopProductsResponseItem = zod.object({
 export const GetTopProductsResponse = zod.array(GetTopProductsResponseItem)
 
 
+/**
+ * @summary List customers
+ */
+export const listCustomersQueryLimitDefault = 50;
+export const listCustomersQueryOffsetDefault = 0;
+
+export const ListCustomersQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().default(listCustomersQueryLimitDefault),
+  "offset": zod.coerce.number().default(listCustomersQueryOffsetDefault)
+})
+
+export const ListCustomersResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "gstin": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "pincode": zod.string().nullish(),
+  "isCredit": zod.boolean(),
+  "creditLimit": zod.number().nullish(),
+  "outstandingDues": zod.number(),
+  "loyaltyPoints": zod.number(),
+  "totalPurchases": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListCustomersResponse = zod.array(ListCustomersResponseItem)
+
+
+/**
+ * @summary Create a customer
+ */
+export const CreateCustomerBody = zod.object({
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "gstin": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "pincode": zod.string().nullish(),
+  "isCredit": zod.boolean().optional(),
+  "creditLimit": zod.number().nullish(),
+  "notes": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get customer by ID
+ */
+export const GetCustomerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCustomerResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "gstin": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "pincode": zod.string().nullish(),
+  "isCredit": zod.boolean(),
+  "creditLimit": zod.number().nullish(),
+  "outstandingDues": zod.number(),
+  "loyaltyPoints": zod.number(),
+  "totalPurchases": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a customer
+ */
+export const UpdateCustomerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCustomerBody = zod.object({
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "gstin": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "pincode": zod.string().nullish(),
+  "isCredit": zod.boolean().optional(),
+  "creditLimit": zod.number().nullish(),
+  "notes": zod.string().nullish()
+})
+
+export const UpdateCustomerResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "name": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "gstin": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "pincode": zod.string().nullish(),
+  "isCredit": zod.boolean(),
+  "creditLimit": zod.number().nullish(),
+  "outstandingDues": zod.number(),
+  "loyaltyPoints": zod.number(),
+  "totalPurchases": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a customer
+ */
+export const DeleteCustomerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List POS sales
+ */
+export const listSalesQueryLimitDefault = 50;
+export const listSalesQueryOffsetDefault = 0;
+
+export const ListSalesQueryParams = zod.object({
+  "limit": zod.coerce.number().default(listSalesQueryLimitDefault),
+  "offset": zod.coerce.number().default(listSalesQueryOffsetDefault),
+  "customerId": zod.coerce.number().optional(),
+  "dateFrom": zod.date().optional(),
+  "dateTo": zod.date().optional()
+})
+
+export const ListSalesResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "saleNumber": zod.string(),
+  "customerId": zod.number().nullish(),
+  "customerName": zod.string().nullish(),
+  "cashierId": zod.number().nullish(),
+  "status": zod.string(),
+  "subtotal": zod.number(),
+  "discountAmount": zod.number(),
+  "taxAmount": zod.number(),
+  "total": zod.number(),
+  "paidAmount": zod.number(),
+  "changeAmount": zod.number(),
+  "paymentStatus": zod.string(),
+  "notes": zod.string().nullish(),
+  "loyaltyPointsEarned": zod.number().optional(),
+  "loyaltyPointsRedeemed": zod.number().optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "productId": zod.number().nullish(),
+  "productName": zod.string(),
+  "sku": zod.string().nullish(),
+  "barcode": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "mrp": zod.number().nullish(),
+  "discountPct": zod.number().optional(),
+  "discountAmount": zod.number().optional(),
+  "gstRate": zod.number().optional(),
+  "gstAmount": zod.number().optional(),
+  "subtotal": zod.number(),
+  "total": zod.number()
+})).optional(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "method": zod.string(),
+  "amount": zod.number(),
+  "reference": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})).optional(),
+  "createdAt": zod.coerce.date()
+})
+export const ListSalesResponse = zod.array(ListSalesResponseItem)
+
+
+/**
+ * @summary Create a POS sale
+ */
+export const CreateSaleBody = zod.object({
+  "customerId": zod.number().nullish(),
+  "customerName": zod.string().nullish(),
+  "items": zod.array(zod.object({
+  "productId": zod.number().nullish(),
+  "productName": zod.string(),
+  "sku": zod.string().nullish(),
+  "barcode": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "mrp": zod.number().nullish(),
+  "discountPct": zod.number().optional(),
+  "discountAmount": zod.number().optional(),
+  "gstRate": zod.number().optional(),
+  "gstAmount": zod.number().optional(),
+  "subtotal": zod.number(),
+  "total": zod.number()
+})),
+  "payments": zod.array(zod.object({
+  "method": zod.enum(['cash', 'card', 'upi', 'credit']),
+  "amount": zod.number(),
+  "reference": zod.string().nullish()
+})),
+  "subtotal": zod.number(),
+  "discountAmount": zod.number().optional(),
+  "taxAmount": zod.number().optional(),
+  "total": zod.number(),
+  "paidAmount": zod.number().optional(),
+  "changeAmount": zod.number().optional(),
+  "loyaltyPointsRedeemed": zod.number().optional(),
+  "notes": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get a sale by ID
+ */
+export const GetSaleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetSaleResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "saleNumber": zod.string(),
+  "customerId": zod.number().nullish(),
+  "customerName": zod.string().nullish(),
+  "cashierId": zod.number().nullish(),
+  "status": zod.string(),
+  "subtotal": zod.number(),
+  "discountAmount": zod.number(),
+  "taxAmount": zod.number(),
+  "total": zod.number(),
+  "paidAmount": zod.number(),
+  "changeAmount": zod.number(),
+  "paymentStatus": zod.string(),
+  "notes": zod.string().nullish(),
+  "loyaltyPointsEarned": zod.number().optional(),
+  "loyaltyPointsRedeemed": zod.number().optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "productId": zod.number().nullish(),
+  "productName": zod.string(),
+  "sku": zod.string().nullish(),
+  "barcode": zod.string().nullish(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "mrp": zod.number().nullish(),
+  "discountPct": zod.number().optional(),
+  "discountAmount": zod.number().optional(),
+  "gstRate": zod.number().optional(),
+  "gstAmount": zod.number().optional(),
+  "subtotal": zod.number(),
+  "total": zod.number()
+})).optional(),
+  "payments": zod.array(zod.object({
+  "id": zod.number(),
+  "saleId": zod.number(),
+  "method": zod.string(),
+  "amount": zod.number(),
+  "reference": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})).optional(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List held bills
+ */
+export const ListHeldBillsResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "cashierId": zod.number().nullish(),
+  "label": zod.string().nullish(),
+  "cartData": zod.object({
+
+}).passthrough(),
+  "createdAt": zod.coerce.date()
+})
+export const ListHeldBillsResponse = zod.array(ListHeldBillsResponseItem)
+
+
+/**
+ * @summary Hold a bill
+ */
+export const CreateHeldBillBody = zod.object({
+  "label": zod.string().nullish(),
+  "cartData": zod.object({
+
+}).passthrough()
+})
+
+
+/**
+ * @summary Delete (resume/discard) a held bill
+ */
+export const DeleteHeldBillParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

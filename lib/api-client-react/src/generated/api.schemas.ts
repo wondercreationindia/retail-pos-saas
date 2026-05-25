@@ -708,6 +708,193 @@ export interface Purchase {
   updatedAt: string;
 }
 
+export interface Customer {
+  id: number;
+  tenantId: number;
+  name: string;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  gstin?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  pincode?: string | null;
+  isCredit: boolean;
+  /** @nullable */
+  creditLimit?: number | null;
+  outstandingDues: number;
+  loyaltyPoints: number;
+  totalPurchases: number;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface CustomerInput {
+  name: string;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  gstin?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  pincode?: string | null;
+  isCredit?: boolean;
+  /** @nullable */
+  creditLimit?: number | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface SaleItemInput {
+  /** @nullable */
+  productId?: number | null;
+  productName: string;
+  /** @nullable */
+  sku?: string | null;
+  /** @nullable */
+  barcode?: string | null;
+  quantity: number;
+  unitPrice: number;
+  /** @nullable */
+  mrp?: number | null;
+  discountPct?: number;
+  discountAmount?: number;
+  gstRate?: number;
+  gstAmount?: number;
+  subtotal: number;
+  total: number;
+}
+
+export type PaymentInputMethod = typeof PaymentInputMethod[keyof typeof PaymentInputMethod];
+
+
+export const PaymentInputMethod = {
+  cash: 'cash',
+  card: 'card',
+  upi: 'upi',
+  credit: 'credit',
+} as const;
+
+export interface PaymentInput {
+  method: PaymentInputMethod;
+  amount: number;
+  /** @nullable */
+  reference?: string | null;
+}
+
+export interface SaleInput {
+  /** @nullable */
+  customerId?: number | null;
+  /** @nullable */
+  customerName?: string | null;
+  items: SaleItemInput[];
+  payments: PaymentInput[];
+  subtotal: number;
+  discountAmount?: number;
+  taxAmount?: number;
+  total: number;
+  paidAmount?: number;
+  changeAmount?: number;
+  loyaltyPointsRedeemed?: number;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface SaleItem {
+  id: number;
+  saleId: number;
+  /** @nullable */
+  productId?: number | null;
+  productName: string;
+  /** @nullable */
+  sku?: string | null;
+  /** @nullable */
+  barcode?: string | null;
+  quantity: number;
+  unitPrice: number;
+  /** @nullable */
+  mrp?: number | null;
+  discountPct?: number;
+  discountAmount?: number;
+  gstRate?: number;
+  gstAmount?: number;
+  subtotal: number;
+  total: number;
+}
+
+export interface Payment {
+  id: number;
+  saleId: number;
+  method: string;
+  amount: number;
+  /** @nullable */
+  reference?: string | null;
+  createdAt?: string;
+}
+
+export interface Sale {
+  id: number;
+  tenantId: number;
+  saleNumber: string;
+  /** @nullable */
+  customerId?: number | null;
+  /** @nullable */
+  customerName?: string | null;
+  /** @nullable */
+  cashierId?: number | null;
+  status: string;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  total: number;
+  paidAmount: number;
+  changeAmount: number;
+  paymentStatus: string;
+  /** @nullable */
+  notes?: string | null;
+  loyaltyPointsEarned?: number;
+  loyaltyPointsRedeemed?: number;
+  items?: SaleItem[];
+  payments?: Payment[];
+  createdAt: string;
+}
+
+export type HeldBillInputCartData = { [key: string]: unknown };
+
+export interface HeldBillInput {
+  /** @nullable */
+  label?: string | null;
+  cartData: HeldBillInputCartData;
+}
+
+export type HeldBillCartData = { [key: string]: unknown };
+
+export interface HeldBill {
+  id: number;
+  tenantId: number;
+  /** @nullable */
+  cashierId?: number | null;
+  /** @nullable */
+  label?: string | null;
+  cartData: HeldBillCartData;
+  createdAt: string;
+}
+
 export type ListProductsParams = {
 categoryId?: number;
 search?: string;
@@ -748,5 +935,19 @@ export type ListPurchasesParams = {
 status?: string;
 limit?: number;
 offset?: number;
+};
+
+export type ListCustomersParams = {
+search?: string;
+limit?: number;
+offset?: number;
+};
+
+export type ListSalesParams = {
+limit?: number;
+offset?: number;
+customerId?: number;
+dateFrom?: string;
+dateTo?: string;
 };
 

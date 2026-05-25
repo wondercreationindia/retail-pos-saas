@@ -8,3 +8,5 @@ export * from "./inventory_logs";
 export * from "./purchases";
 export * from "./stock_adjustments";
 export * from "./stock_transfers";
+export * from "./customers";
+export * from "./sales";

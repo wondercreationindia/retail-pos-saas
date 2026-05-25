@@ -10,6 +10,8 @@ import dashboardRouter from "./dashboard";
 import suppliersRouter from "./suppliers";
 import inventoryRouter from "./inventory";
 import purchasesRouter from "./purchases";
+import customersRouter from "./customers";
+import posRouter from "./pos";
 
 const router: IRouter = Router();
 
@@ -24,5 +26,7 @@ router.use(dashboardRouter);
 router.use(suppliersRouter);
 router.use(inventoryRouter);
 router.use(purchasesRouter);
+router.use(customersRouter);
+router.use(posRouter);
 
 export default router;

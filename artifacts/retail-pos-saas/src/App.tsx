@@ -16,6 +16,8 @@ import Settings from "@/pages/settings";
 import Inventory from "@/pages/inventory";
 import Suppliers from "@/pages/suppliers";
 import Purchases from "@/pages/purchases";
+import Customers from "@/pages/customers";
+import POS from "@/pages/pos";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -69,6 +71,18 @@ function Router() {
       </Route>
       <Route path="/purchases">
         <ProtectedRoute component={Purchases} />
+      </Route>
+      <Route path="/customers">
+        <ProtectedRoute component={Customers} />
+      </Route>
+      <Route path="/pos">
+        {isAuthenticated ? (
+          <div className="h-screen flex flex-col overflow-hidden">
+            <POS />
+          </div>
+        ) : (
+          <Redirect to="/login" />
+        )}
       </Route>
       <Route path="/">
         {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
