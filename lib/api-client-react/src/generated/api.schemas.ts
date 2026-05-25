@@ -1012,6 +1012,300 @@ export interface WhatsappLog {
   createdAt: string;
 }
 
+export interface Account {
+  id: number;
+  tenantId: number;
+  code: string;
+  name: string;
+  type: string;
+  /** @nullable */
+  group?: string | null;
+  /** @nullable */
+  parentId?: number | null;
+  isGroup: boolean;
+  isSystem: boolean;
+  openingBalance: number;
+  /** @nullable */
+  openingBalanceDate?: string | null;
+  /** @nullable */
+  description?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AccountInput {
+  code: string;
+  name: string;
+  type: string;
+  /** @nullable */
+  group?: string | null;
+  /** @nullable */
+  parentId?: number | null;
+  isGroup?: boolean;
+  openingBalance?: number;
+  /** @nullable */
+  openingBalanceDate?: string | null;
+  /** @nullable */
+  description?: string | null;
+}
+
+export interface JournalItem {
+  id: number;
+  entryId: number;
+  accountId: number;
+  /** @nullable */
+  accountName?: string | null;
+  /** @nullable */
+  accountCode?: string | null;
+  debit: number;
+  credit: number;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  partyType?: string | null;
+  /** @nullable */
+  partyId?: number | null;
+  /** @nullable */
+  partyName?: string | null;
+}
+
+export interface JournalItemInput {
+  accountId: number;
+  debit: number;
+  credit: number;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  partyType?: string | null;
+  /** @nullable */
+  partyId?: number | null;
+  /** @nullable */
+  partyName?: string | null;
+}
+
+export interface JournalEntry {
+  id: number;
+  tenantId: number;
+  entryNumber: string;
+  date: string;
+  description: string;
+  /** @nullable */
+  referenceType?: string | null;
+  /** @nullable */
+  referenceId?: number | null;
+  /** @nullable */
+  referenceNumber?: string | null;
+  status: string;
+  totalDebit: number;
+  totalCredit: number;
+  /** @nullable */
+  narration?: string | null;
+  /** @nullable */
+  createdBy?: number | null;
+  createdAt: string;
+  items?: JournalItem[];
+}
+
+export interface JournalEntryInput {
+  date: string;
+  description: string;
+  /** @nullable */
+  narration?: string | null;
+  /** @nullable */
+  referenceType?: string | null;
+  /** @nullable */
+  referenceNumber?: string | null;
+  items: JournalItemInput[];
+}
+
+export interface Voucher {
+  id: number;
+  tenantId: number;
+  voucherNumber: string;
+  type: string;
+  date: string;
+  amount: number;
+  /** @nullable */
+  accountId?: number | null;
+  /** @nullable */
+  accountName?: string | null;
+  /** @nullable */
+  contraAccountId?: number | null;
+  /** @nullable */
+  contraAccountName?: string | null;
+  /** @nullable */
+  partyType?: string | null;
+  /** @nullable */
+  partyId?: number | null;
+  /** @nullable */
+  partyName?: string | null;
+  description: string;
+  /** @nullable */
+  reference?: string | null;
+  status: string;
+  /** @nullable */
+  journalEntryId?: number | null;
+  createdAt: string;
+}
+
+export interface VoucherInput {
+  type: string;
+  date: string;
+  amount: number;
+  accountId: number;
+  contraAccountId: number;
+  /** @nullable */
+  partyType?: string | null;
+  /** @nullable */
+  partyId?: number | null;
+  /** @nullable */
+  partyName?: string | null;
+  description: string;
+  /** @nullable */
+  reference?: string | null;
+}
+
+export interface Expense {
+  id: number;
+  tenantId: number;
+  expenseNumber: string;
+  date: string;
+  category: string;
+  amount: number;
+  gstAmount?: number;
+  totalAmount: number;
+  /** @nullable */
+  vendor?: string | null;
+  description: string;
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  accountId?: number | null;
+  /** @nullable */
+  paidFromAccountId?: number | null;
+  status: string;
+  /** @nullable */
+  approvedBy?: number | null;
+  /** @nullable */
+  approvedAt?: string | null;
+  /** @nullable */
+  journalEntryId?: number | null;
+  /** @nullable */
+  attachmentUrl?: string | null;
+  isRecurring?: boolean;
+  /** @nullable */
+  recurrencePeriod?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface ExpenseInput {
+  date: string;
+  category: string;
+  amount: number;
+  gstAmount?: number;
+  /** @nullable */
+  vendor?: string | null;
+  description: string;
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  accountId?: number | null;
+  /** @nullable */
+  paidFromAccountId?: number | null;
+  isRecurring?: boolean;
+  /** @nullable */
+  recurrencePeriod?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  attachmentUrl?: string | null;
+}
+
+export interface LedgerTransaction {
+  id: number;
+  accountId: number;
+  journalEntryId?: number;
+  /** @nullable */
+  entryNumber?: string | null;
+  date: string;
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  /** @nullable */
+  referenceType?: string | null;
+  /** @nullable */
+  referenceId?: number | null;
+  /** @nullable */
+  referenceNumber?: string | null;
+  /** @nullable */
+  partyType?: string | null;
+  /** @nullable */
+  partyId?: number | null;
+  /** @nullable */
+  partyName?: string | null;
+  createdAt?: string;
+}
+
+export interface TrialBalanceRow {
+  accountId: number;
+  code: string;
+  name: string;
+  type: string;
+  /** @nullable */
+  group?: string | null;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface ProfitLossReport {
+  income: TrialBalanceRow[];
+  expenses: TrialBalanceRow[];
+  totalIncome?: number;
+  totalExpenses?: number;
+  grossProfit: number;
+  netProfit: number;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface CashSummary {
+  openingBalance: number;
+  totalIn: number;
+  totalOut: number;
+  closingBalance: number;
+  transactions?: LedgerTransaction[];
+}
+
+export interface OutstandingParty {
+  partyId: number;
+  partyName: string;
+  partyType: string;
+  totalInvoiced: number;
+  totalPaid: number;
+  balance: number;
+  /** @nullable */
+  oldestDue?: string | null;
+}
+
+export interface GstSummaryReport {
+  outputGst: number;
+  inputGst: number;
+  netPayable: number;
+  salesCount?: number;
+  purchaseCount?: number;
+  dateFrom: string;
+  dateTo: string;
+}
+
+export interface VoidJournalEntryInput {
+  reason: string;
+}
+
 export interface OpenSessionInput {
   openingCash: number;
   /** @nullable */
@@ -1108,4 +1402,101 @@ export const ListCashierSessionsStatus = {
   open: 'open',
   closed: 'closed',
 } as const;
+
+export type ListAccountsParams = {
+type?: string;
+includeInactive?: string;
+};
+
+export type SeedAccounts201 = {
+  created?: number;
+};
+
+export type ListJournalEntriesParams = {
+dateFrom?: string;
+dateTo?: string;
+referenceType?: string;
+limit?: number;
+offset?: number;
+};
+
+export type ListVouchersParams = {
+type?: string;
+dateFrom?: string;
+dateTo?: string;
+limit?: number;
+};
+
+export type ListExpensesParams = {
+status?: string;
+category?: string;
+dateFrom?: string;
+dateTo?: string;
+limit?: number;
+};
+
+export type UpdateExpenseBody = {
+  status?: string;
+  /** @nullable */
+  notes?: string | null;
+  category?: string;
+  amount?: number;
+  gstAmount?: number;
+  description?: string;
+  /** @nullable */
+  vendor?: string | null;
+  /** @nullable */
+  paymentMethod?: string | null;
+};
+
+export type GetAccountLedgerParams = {
+dateFrom?: string;
+dateTo?: string;
+limit?: number;
+};
+
+export type GetAccountLedger200 = {
+  account?: Account;
+  openingBalance?: number;
+  transactions?: LedgerTransaction[];
+  closingBalance?: number;
+};
+
+export type GetTrialBalanceParams = {
+dateFrom?: string;
+dateTo?: string;
+};
+
+export type GetProfitLossParams = {
+dateFrom?: string;
+dateTo?: string;
+};
+
+export type GetCashSummaryParams = {
+accountId?: number;
+dateFrom?: string;
+dateTo?: string;
+};
+
+export type GetGstSummaryParams = {
+dateFrom?: string;
+dateTo?: string;
+};
+
+export type GetDayClosingParams = {
+date?: string;
+};
+
+export type GetDayClosing200 = {
+  date?: string;
+  totalSales?: number;
+  totalCashSales?: number;
+  totalCardSales?: number;
+  totalUpiSales?: number;
+  totalExpenses?: number;
+  totalPurchases?: number;
+  netCashIn?: number;
+  salesCount?: number;
+  expensesCount?: number;
+};
 

@@ -1709,3 +1709,685 @@ export const GetCustomerLoyaltyResponseItem = zod.object({
 export const GetCustomerLoyaltyResponse = zod.array(GetCustomerLoyaltyResponseItem)
 
 
+/**
+ * @summary List chart of accounts
+ */
+export const ListAccountsQueryParams = zod.object({
+  "type": zod.coerce.string().optional(),
+  "includeInactive": zod.coerce.string().optional()
+})
+
+export const ListAccountsResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "parentId": zod.number().nullish(),
+  "isGroup": zod.boolean(),
+  "isSystem": zod.boolean(),
+  "openingBalance": zod.number(),
+  "openingBalanceDate": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+export const ListAccountsResponse = zod.array(ListAccountsResponseItem)
+
+
+/**
+ * @summary Create an account
+ */
+export const CreateAccountBody = zod.object({
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "parentId": zod.number().nullish(),
+  "isGroup": zod.boolean().optional(),
+  "openingBalance": zod.number().optional(),
+  "openingBalanceDate": zod.string().nullish(),
+  "description": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update an account
+ */
+export const UpdateAccountParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateAccountBody = zod.object({
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "parentId": zod.number().nullish(),
+  "isGroup": zod.boolean().optional(),
+  "openingBalance": zod.number().optional(),
+  "openingBalanceDate": zod.string().nullish(),
+  "description": zod.string().nullish()
+})
+
+export const UpdateAccountResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "parentId": zod.number().nullish(),
+  "isGroup": zod.boolean(),
+  "isSystem": zod.boolean(),
+  "openingBalance": zod.number(),
+  "openingBalanceDate": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Delete a non-system account
+ */
+export const DeleteAccountParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List journal entries
+ */
+export const ListJournalEntriesQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional(),
+  "referenceType": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().optional(),
+  "offset": zod.coerce.number().optional()
+})
+
+export const ListJournalEntriesResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "entryNumber": zod.string(),
+  "date": zod.string(),
+  "description": zod.string(),
+  "referenceType": zod.string().nullish(),
+  "referenceId": zod.number().nullish(),
+  "referenceNumber": zod.string().nullish(),
+  "status": zod.string(),
+  "totalDebit": zod.number(),
+  "totalCredit": zod.number(),
+  "narration": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "entryId": zod.number(),
+  "accountId": zod.number(),
+  "accountName": zod.string().nullish(),
+  "accountCode": zod.string().nullish(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "description": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish()
+})).optional()
+})
+export const ListJournalEntriesResponse = zod.array(ListJournalEntriesResponseItem)
+
+
+/**
+ * @summary Create a manual journal entry
+ */
+export const CreateJournalEntryBody = zod.object({
+  "date": zod.string(),
+  "description": zod.string(),
+  "narration": zod.string().nullish(),
+  "referenceType": zod.string().nullish(),
+  "referenceNumber": zod.string().nullish(),
+  "items": zod.array(zod.object({
+  "accountId": zod.number(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "description": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Get a journal entry with items
+ */
+export const GetJournalEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetJournalEntryResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "entryNumber": zod.string(),
+  "date": zod.string(),
+  "description": zod.string(),
+  "referenceType": zod.string().nullish(),
+  "referenceId": zod.number().nullish(),
+  "referenceNumber": zod.string().nullish(),
+  "status": zod.string(),
+  "totalDebit": zod.number(),
+  "totalCredit": zod.number(),
+  "narration": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "entryId": zod.number(),
+  "accountId": zod.number(),
+  "accountName": zod.string().nullish(),
+  "accountCode": zod.string().nullish(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "description": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish()
+})).optional()
+})
+
+
+/**
+ * @summary Void a journal entry (reversal)
+ */
+export const VoidJournalEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const VoidJournalEntryBody = zod.object({
+  "reason": zod.string()
+})
+
+export const VoidJournalEntryResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "entryNumber": zod.string(),
+  "date": zod.string(),
+  "description": zod.string(),
+  "referenceType": zod.string().nullish(),
+  "referenceId": zod.number().nullish(),
+  "referenceNumber": zod.string().nullish(),
+  "status": zod.string(),
+  "totalDebit": zod.number(),
+  "totalCredit": zod.number(),
+  "narration": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "entryId": zod.number(),
+  "accountId": zod.number(),
+  "accountName": zod.string().nullish(),
+  "accountCode": zod.string().nullish(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "description": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish()
+})).optional()
+})
+
+
+/**
+ * @summary List vouchers
+ */
+export const ListVouchersQueryParams = zod.object({
+  "type": zod.coerce.string().optional(),
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListVouchersResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "voucherNumber": zod.string(),
+  "type": zod.string(),
+  "date": zod.string(),
+  "amount": zod.number(),
+  "accountId": zod.number().nullish(),
+  "accountName": zod.string().nullish(),
+  "contraAccountId": zod.number().nullish(),
+  "contraAccountName": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish(),
+  "description": zod.string(),
+  "reference": zod.string().nullish(),
+  "status": zod.string(),
+  "journalEntryId": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListVouchersResponse = zod.array(ListVouchersResponseItem)
+
+
+/**
+ * @summary Create a voucher (auto-creates journal entry)
+ */
+export const CreateVoucherBody = zod.object({
+  "type": zod.string(),
+  "date": zod.string(),
+  "amount": zod.number(),
+  "accountId": zod.number(),
+  "contraAccountId": zod.number(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish(),
+  "description": zod.string(),
+  "reference": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get voucher details
+ */
+export const GetVoucherParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetVoucherResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "voucherNumber": zod.string(),
+  "type": zod.string(),
+  "date": zod.string(),
+  "amount": zod.number(),
+  "accountId": zod.number().nullish(),
+  "accountName": zod.string().nullish(),
+  "contraAccountId": zod.number().nullish(),
+  "contraAccountName": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish(),
+  "description": zod.string(),
+  "reference": zod.string().nullish(),
+  "status": zod.string(),
+  "journalEntryId": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Cancel a voucher
+ */
+export const CancelVoucherParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List expenses
+ */
+export const ListExpensesQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "category": zod.coerce.string().optional(),
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListExpensesResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "expenseNumber": zod.string(),
+  "date": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "gstAmount": zod.number().optional(),
+  "totalAmount": zod.number(),
+  "vendor": zod.string().nullish(),
+  "description": zod.string(),
+  "paymentMethod": zod.string().nullish(),
+  "accountId": zod.number().nullish(),
+  "paidFromAccountId": zod.number().nullish(),
+  "status": zod.string(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "journalEntryId": zod.number().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "isRecurring": zod.boolean().optional(),
+  "recurrencePeriod": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListExpensesResponse = zod.array(ListExpensesResponseItem)
+
+
+/**
+ * @summary Create an expense
+ */
+export const CreateExpenseBody = zod.object({
+  "date": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "gstAmount": zod.number().optional(),
+  "vendor": zod.string().nullish(),
+  "description": zod.string(),
+  "paymentMethod": zod.string().nullish(),
+  "accountId": zod.number().nullish(),
+  "paidFromAccountId": zod.number().nullish(),
+  "isRecurring": zod.boolean().optional(),
+  "recurrencePeriod": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "attachmentUrl": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get expense
+ */
+export const GetExpenseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetExpenseResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "expenseNumber": zod.string(),
+  "date": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "gstAmount": zod.number().optional(),
+  "totalAmount": zod.number(),
+  "vendor": zod.string().nullish(),
+  "description": zod.string(),
+  "paymentMethod": zod.string().nullish(),
+  "accountId": zod.number().nullish(),
+  "paidFromAccountId": zod.number().nullish(),
+  "status": zod.string(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "journalEntryId": zod.number().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "isRecurring": zod.boolean().optional(),
+  "recurrencePeriod": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update or approve/reject an expense
+ */
+export const UpdateExpenseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateExpenseBody = zod.object({
+  "status": zod.string().optional(),
+  "notes": zod.string().nullish(),
+  "category": zod.string().optional(),
+  "amount": zod.number().optional(),
+  "gstAmount": zod.number().optional(),
+  "description": zod.string().optional(),
+  "vendor": zod.string().nullish(),
+  "paymentMethod": zod.string().nullish()
+})
+
+export const UpdateExpenseResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "expenseNumber": zod.string(),
+  "date": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "gstAmount": zod.number().optional(),
+  "totalAmount": zod.number(),
+  "vendor": zod.string().nullish(),
+  "description": zod.string(),
+  "paymentMethod": zod.string().nullish(),
+  "accountId": zod.number().nullish(),
+  "paidFromAccountId": zod.number().nullish(),
+  "status": zod.string(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "journalEntryId": zod.number().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "isRecurring": zod.boolean().optional(),
+  "recurrencePeriod": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a pending expense
+ */
+export const DeleteExpenseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get ledger transactions for an account
+ */
+export const GetAccountLedgerParams = zod.object({
+  "accountId": zod.coerce.number()
+})
+
+export const GetAccountLedgerQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const GetAccountLedgerResponse = zod.object({
+  "account": zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "parentId": zod.number().nullish(),
+  "isGroup": zod.boolean(),
+  "isSystem": zod.boolean(),
+  "openingBalance": zod.number(),
+  "openingBalanceDate": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+}).optional(),
+  "openingBalance": zod.number().optional(),
+  "transactions": zod.array(zod.object({
+  "id": zod.number(),
+  "accountId": zod.number(),
+  "journalEntryId": zod.number().optional(),
+  "entryNumber": zod.string().nullish(),
+  "date": zod.string(),
+  "description": zod.string(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "balance": zod.number(),
+  "referenceType": zod.string().nullish(),
+  "referenceId": zod.number().nullish(),
+  "referenceNumber": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})).optional(),
+  "closingBalance": zod.number().optional()
+})
+
+
+/**
+ * @summary Trial balance report
+ */
+export const GetTrialBalanceQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional()
+})
+
+export const GetTrialBalanceResponseItem = zod.object({
+  "accountId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "balance": zod.number()
+})
+export const GetTrialBalanceResponse = zod.array(GetTrialBalanceResponseItem)
+
+
+/**
+ * @summary Profit & Loss report
+ */
+export const GetProfitLossQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional()
+})
+
+export const GetProfitLossResponse = zod.object({
+  "income": zod.array(zod.object({
+  "accountId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "balance": zod.number()
+})),
+  "expenses": zod.array(zod.object({
+  "accountId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "group": zod.string().nullish(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "balance": zod.number()
+})),
+  "totalIncome": zod.number().optional(),
+  "totalExpenses": zod.number().optional(),
+  "grossProfit": zod.number(),
+  "netProfit": zod.number(),
+  "dateFrom": zod.string().optional(),
+  "dateTo": zod.string().optional()
+})
+
+
+/**
+ * @summary Cash/Bank book summary
+ */
+export const GetCashSummaryQueryParams = zod.object({
+  "accountId": zod.coerce.number().optional(),
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional()
+})
+
+export const GetCashSummaryResponse = zod.object({
+  "openingBalance": zod.number(),
+  "totalIn": zod.number(),
+  "totalOut": zod.number(),
+  "closingBalance": zod.number(),
+  "transactions": zod.array(zod.object({
+  "id": zod.number(),
+  "accountId": zod.number(),
+  "journalEntryId": zod.number().optional(),
+  "entryNumber": zod.string().nullish(),
+  "date": zod.string(),
+  "description": zod.string(),
+  "debit": zod.number(),
+  "credit": zod.number(),
+  "balance": zod.number(),
+  "referenceType": zod.string().nullish(),
+  "referenceId": zod.number().nullish(),
+  "referenceNumber": zod.string().nullish(),
+  "partyType": zod.string().nullish(),
+  "partyId": zod.number().nullish(),
+  "partyName": zod.string().nullish(),
+  "createdAt": zod.coerce.date().optional()
+})).optional()
+})
+
+
+/**
+ * @summary GST summary report
+ */
+export const GetGstSummaryQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().optional(),
+  "dateTo": zod.coerce.string().optional()
+})
+
+export const GetGstSummaryResponse = zod.object({
+  "outputGst": zod.number(),
+  "inputGst": zod.number(),
+  "netPayable": zod.number(),
+  "salesCount": zod.number().optional(),
+  "purchaseCount": zod.number().optional(),
+  "dateFrom": zod.string(),
+  "dateTo": zod.string()
+})
+
+
+/**
+ * @summary Day closing report
+ */
+export const GetDayClosingQueryParams = zod.object({
+  "date": zod.coerce.string().optional()
+})
+
+export const GetDayClosingResponse = zod.object({
+  "date": zod.string().optional(),
+  "totalSales": zod.number().optional(),
+  "totalCashSales": zod.number().optional(),
+  "totalCardSales": zod.number().optional(),
+  "totalUpiSales": zod.number().optional(),
+  "totalExpenses": zod.number().optional(),
+  "totalPurchases": zod.number().optional(),
+  "netCashIn": zod.number().optional(),
+  "salesCount": zod.number().optional(),
+  "expensesCount": zod.number().optional()
+})
+
+
+/**
+ * @summary Customer outstanding balances
+ */
+export const GetCustomerOutstandingResponseItem = zod.object({
+  "partyId": zod.number(),
+  "partyName": zod.string(),
+  "partyType": zod.string(),
+  "totalInvoiced": zod.number(),
+  "totalPaid": zod.number(),
+  "balance": zod.number(),
+  "oldestDue": zod.string().nullish()
+})
+export const GetCustomerOutstandingResponse = zod.array(GetCustomerOutstandingResponseItem)
+
+
+/**
+ * @summary Supplier outstanding balances
+ */
+export const GetSupplierOutstandingResponseItem = zod.object({
+  "partyId": zod.number(),
+  "partyName": zod.string(),
+  "partyType": zod.string(),
+  "totalInvoiced": zod.number(),
+  "totalPaid": zod.number(),
+  "balance": zod.number(),
+  "oldestDue": zod.string().nullish()
+})
+export const GetSupplierOutstandingResponse = zod.array(GetSupplierOutstandingResponseItem)
+
+

@@ -19,6 +19,12 @@ import Purchases from "@/pages/purchases";
 import Customers from "@/pages/customers";
 import POS from "@/pages/pos";
 import InvoiceHistory from "@/pages/invoice-history";
+import AccountingAccounts from "@/pages/accounting-accounts";
+import AccountingJournals from "@/pages/accounting-journals";
+import AccountingVouchers from "@/pages/accounting-vouchers";
+import AccountingExpenses from "@/pages/accounting-expenses";
+import AccountingLedger from "@/pages/accounting-ledger";
+import AccountingReports from "@/pages/accounting-reports";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -85,6 +91,24 @@ function Router() {
       </Route>
       <Route path="/customers">
         <ProtectedRoute component={Customers} />
+      </Route>
+      <Route path="/accounting/accounts">
+        <ProtectedRoute component={AccountingAccounts} />
+      </Route>
+      <Route path="/accounting/journals">
+        <ProtectedRoute component={AccountingJournals} />
+      </Route>
+      <Route path="/accounting/vouchers">
+        <ProtectedRoute component={AccountingVouchers} />
+      </Route>
+      <Route path="/accounting/expenses">
+        <ProtectedRoute component={AccountingExpenses} />
+      </Route>
+      <Route path="/accounting/ledger">
+        <ProtectedRoute component={AccountingLedger} />
+      </Route>
+      <Route path="/accounting/reports">
+        <ProtectedRoute component={AccountingReports} />
       </Route>
       <Route path="/pos/invoices">
         <FullScreenRoute component={InvoiceHistory} />

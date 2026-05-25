@@ -34,6 +34,8 @@ tags:
     description: Customer management
   - name: pos
     description: POS billing
+  - name: accounting
+    description: Accounting engine — Chart of Accounts, Journals, Vouchers, Ledger, Reports
 
 paths:
   /healthz:
@@ -1375,6 +1377,529 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/LoyaltyTransaction"
+
+  # ─── ACCOUNTING — CHART OF ACCOUNTS ─────────────────────────────────────────
+  /accounting/accounts:
+    get:
+      operationId: listAccounts
+      tags: [accounting]
+      summary: List chart of accounts
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: includeInactive
+          schema: { type: string }
+      responses:
+        "200":
+          description: Accounts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Account" }
+    post:
+      operationId: createAccount
+      tags: [accounting]
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountInput" }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+
+  /accounting/accounts/seed:
+    post:
+      operationId: seedAccounts
+      tags: [accounting]
+      summary: Seed default chart of accounts for the tenant
+      responses:
+        "201":
+          description: Accounts seeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created: { type: integer }
+
+  /accounting/accounts/{id}:
+    patch:
+      operationId: updateAccount
+      tags: [accounting]
+      summary: Update an account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+    delete:
+      operationId: deleteAccount
+      tags: [accounting]
+      summary: Delete a non-system account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── ACCOUNTING — JOURNAL ENTRIES ────────────────────────────────────────────
+  /accounting/journals:
+    get:
+      operationId: listJournalEntries
+      tags: [accounting]
+      summary: List journal entries
+      parameters:
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+        - in: query
+          name: referenceType
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Journal entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/JournalEntry" }
+    post:
+      operationId: createJournalEntry
+      tags: [accounting]
+      summary: Create a manual journal entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/JournalEntryInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JournalEntry" }
+
+  /accounting/journals/{id}:
+    get:
+      operationId: getJournalEntry
+      tags: [accounting]
+      summary: Get a journal entry with items
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Journal entry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JournalEntry" }
+
+  /accounting/journals/{id}/void:
+    post:
+      operationId: voidJournalEntry
+      tags: [accounting]
+      summary: Void a journal entry (reversal)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoidJournalEntryInput"
+      responses:
+        "200":
+          description: Voided
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JournalEntry" }
+
+  # ─── ACCOUNTING — VOUCHERS ───────────────────────────────────────────────────
+  /accounting/vouchers:
+    get:
+      operationId: listVouchers
+      tags: [accounting]
+      summary: List vouchers
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Vouchers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Voucher" }
+    post:
+      operationId: createVoucher
+      tags: [accounting]
+      summary: Create a voucher (auto-creates journal entry)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VoucherInput" }
+      responses:
+        "201":
+          description: Voucher created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Voucher" }
+
+  /accounting/vouchers/{id}:
+    get:
+      operationId: getVoucher
+      tags: [accounting]
+      summary: Get voucher details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Voucher
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Voucher" }
+    delete:
+      operationId: cancelVoucher
+      tags: [accounting]
+      summary: Cancel a voucher
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Cancelled
+
+  # ─── ACCOUNTING — EXPENSES ───────────────────────────────────────────────────
+  /accounting/expenses:
+    get:
+      operationId: listExpenses
+      tags: [accounting]
+      summary: List expenses
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Expense" }
+    post:
+      operationId: createExpense
+      tags: [accounting]
+      summary: Create an expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExpenseInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Expense" }
+
+  /accounting/expenses/{id}:
+    get:
+      operationId: getExpense
+      tags: [accounting]
+      summary: Get expense
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Expense
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Expense" }
+    patch:
+      operationId: updateExpense
+      tags: [accounting]
+      summary: Update or approve/reject an expense
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+                notes: { type: ["string","null"] }
+                category: { type: string }
+                amount: { type: number }
+                gstAmount: { type: number }
+                description: { type: string }
+                vendor: { type: ["string","null"] }
+                paymentMethod: { type: ["string","null"] }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Expense" }
+    delete:
+      operationId: deleteExpense
+      tags: [accounting]
+      summary: Delete a pending expense
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── ACCOUNTING — LEDGER ─────────────────────────────────────────────────────
+  /accounting/ledger/{accountId}:
+    get:
+      operationId: getAccountLedger
+      tags: [accounting]
+      summary: Get ledger transactions for an account
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Ledger
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account: { $ref: "#/components/schemas/Account" }
+                  openingBalance: { type: number }
+                  transactions:
+                    type: array
+                    items: { $ref: "#/components/schemas/LedgerTransaction" }
+                  closingBalance: { type: number }
+
+  # ─── ACCOUNTING — REPORTS ────────────────────────────────────────────────────
+  /accounting/reports/trial-balance:
+    get:
+      operationId: getTrialBalance
+      tags: [accounting]
+      summary: Trial balance report
+      parameters:
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+      responses:
+        "200":
+          description: Trial balance
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TrialBalanceRow" }
+
+  /accounting/reports/profit-loss:
+    get:
+      operationId: getProfitLoss
+      tags: [accounting]
+      summary: Profit & Loss report
+      parameters:
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+      responses:
+        "200":
+          description: P&L
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProfitLossReport" }
+
+  /accounting/reports/cash-summary:
+    get:
+      operationId: getCashSummary
+      tags: [accounting]
+      summary: Cash/Bank book summary
+      parameters:
+        - in: query
+          name: accountId
+          schema: { type: integer }
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+      responses:
+        "200":
+          description: Cash summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CashSummary" }
+
+  /accounting/reports/gst-summary:
+    get:
+      operationId: getGstSummary
+      tags: [accounting]
+      summary: GST summary report
+      parameters:
+        - in: query
+          name: dateFrom
+          schema: { type: string }
+        - in: query
+          name: dateTo
+          schema: { type: string }
+      responses:
+        "200":
+          description: GST summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GstSummaryReport" }
+
+  /accounting/reports/day-closing:
+    get:
+      operationId: getDayClosing
+      tags: [accounting]
+      summary: Day closing report
+      parameters:
+        - in: query
+          name: date
+          schema: { type: string }
+      responses:
+        "200":
+          description: Day closing data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date: { type: string }
+                  totalSales: { type: number }
+                  totalCashSales: { type: number }
+                  totalCardSales: { type: number }
+                  totalUpiSales: { type: number }
+                  totalExpenses: { type: number }
+                  totalPurchases: { type: number }
+                  netCashIn: { type: number }
+                  salesCount: { type: integer }
+                  expensesCount: { type: integer }
+
+  # ─── ACCOUNTING — OUTSTANDING ────────────────────────────────────────────────
+  /accounting/outstanding/customers:
+    get:
+      operationId: getCustomerOutstanding
+      tags: [accounting]
+      summary: Customer outstanding balances
+      responses:
+        "200":
+          description: Customer dues
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/OutstandingParty" }
+
+  /accounting/outstanding/suppliers:
+    get:
+      operationId: getSupplierOutstanding
+      tags: [accounting]
+      summary: Supplier outstanding balances
+      responses:
+        "200":
+          description: Supplier dues
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/OutstandingParty" }
 
 components:
   schemas:
@@ -2886,8 +3411,282 @@ components:
           type: string
           format: date-time
 
+    # ─── ACCOUNTING SCHEMAS ───────────────────────────────────────────────────
+    Account:
+      type: object
+      required: [id, tenantId, code, name, type, isGroup, isSystem, openingBalance, isActive, createdAt]
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        type: { type: string }
+        group: { type: ["string","null"] }
+        parentId: { type: ["integer","null"] }
+        isGroup: { type: boolean }
+        isSystem: { type: boolean }
+        openingBalance: { type: number }
+        openingBalanceDate: { type: ["string","null"] }
+        description: { type: ["string","null"] }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    AccountInput:
+      type: object
+      required: [code, name, type]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        type: { type: string }
+        group: { type: ["string","null"] }
+        parentId: { type: ["integer","null"] }
+        isGroup: { type: boolean }
+        openingBalance: { type: number }
+        openingBalanceDate: { type: ["string","null"] }
+        description: { type: ["string","null"] }
+
+    JournalItem:
+      type: object
+      required: [id, entryId, accountId, debit, credit]
+      properties:
+        id: { type: integer }
+        entryId: { type: integer }
+        accountId: { type: integer }
+        accountName: { type: ["string","null"] }
+        accountCode: { type: ["string","null"] }
+        debit: { type: number }
+        credit: { type: number }
+        description: { type: ["string","null"] }
+        partyType: { type: ["string","null"] }
+        partyId: { type: ["integer","null"] }
+        partyName: { type: ["string","null"] }
+
+    JournalItemInput:
+      type: object
+      required: [accountId, debit, credit]
+      properties:
+        accountId: { type: integer }
+        debit: { type: number }
+        credit: { type: number }
+        description: { type: ["string","null"] }
+        partyType: { type: ["string","null"] }
+        partyId: { type: ["integer","null"] }
+        partyName: { type: ["string","null"] }
+
+    JournalEntry:
+      type: object
+      required: [id, tenantId, entryNumber, date, description, status, totalDebit, totalCredit, createdAt]
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        entryNumber: { type: string }
+        date: { type: string }
+        description: { type: string }
+        referenceType: { type: ["string","null"] }
+        referenceId: { type: ["integer","null"] }
+        referenceNumber: { type: ["string","null"] }
+        status: { type: string }
+        totalDebit: { type: number }
+        totalCredit: { type: number }
+        narration: { type: ["string","null"] }
+        createdBy: { type: ["integer","null"] }
+        createdAt: { type: string, format: date-time }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/JournalItem" }
+
+    JournalEntryInput:
+      type: object
+      required: [date, description, items]
+      properties:
+        date: { type: string }
+        description: { type: string }
+        narration: { type: ["string","null"] }
+        referenceType: { type: ["string","null"] }
+        referenceNumber: { type: ["string","null"] }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/JournalItemInput" }
+
+    Voucher:
+      type: object
+      required: [id, tenantId, voucherNumber, type, date, amount, description, status, createdAt]
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        voucherNumber: { type: string }
+        type: { type: string }
+        date: { type: string }
+        amount: { type: number }
+        accountId: { type: ["integer","null"] }
+        accountName: { type: ["string","null"] }
+        contraAccountId: { type: ["integer","null"] }
+        contraAccountName: { type: ["string","null"] }
+        partyType: { type: ["string","null"] }
+        partyId: { type: ["integer","null"] }
+        partyName: { type: ["string","null"] }
+        description: { type: string }
+        reference: { type: ["string","null"] }
+        status: { type: string }
+        journalEntryId: { type: ["integer","null"] }
+        createdAt: { type: string, format: date-time }
+
+    VoucherInput:
+      type: object
+      required: [type, date, amount, accountId, contraAccountId, description]
+      properties:
+        type: { type: string }
+        date: { type: string }
+        amount: { type: number }
+        accountId: { type: integer }
+        contraAccountId: { type: integer }
+        partyType: { type: ["string","null"] }
+        partyId: { type: ["integer","null"] }
+        partyName: { type: ["string","null"] }
+        description: { type: string }
+        reference: { type: ["string","null"] }
+
+    Expense:
+      type: object
+      required: [id, tenantId, expenseNumber, date, category, amount, totalAmount, description, status, createdAt]
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        expenseNumber: { type: string }
+        date: { type: string }
+        category: { type: string }
+        amount: { type: number }
+        gstAmount: { type: number }
+        totalAmount: { type: number }
+        vendor: { type: ["string","null"] }
+        description: { type: string }
+        paymentMethod: { type: ["string","null"] }
+        accountId: { type: ["integer","null"] }
+        paidFromAccountId: { type: ["integer","null"] }
+        status: { type: string }
+        approvedBy: { type: ["integer","null"] }
+        approvedAt: { type: ["string","null"] }
+        journalEntryId: { type: ["integer","null"] }
+        attachmentUrl: { type: ["string","null"] }
+        isRecurring: { type: boolean }
+        recurrencePeriod: { type: ["string","null"] }
+        notes: { type: ["string","null"] }
+        createdAt: { type: string, format: date-time }
+
+    ExpenseInput:
+      type: object
+      required: [date, category, amount, description]
+      properties:
+        date: { type: string }
+        category: { type: string }
+        amount: { type: number }
+        gstAmount: { type: number }
+        vendor: { type: ["string","null"] }
+        description: { type: string }
+        paymentMethod: { type: ["string","null"] }
+        accountId: { type: ["integer","null"] }
+        paidFromAccountId: { type: ["integer","null"] }
+        isRecurring: { type: boolean }
+        recurrencePeriod: { type: ["string","null"] }
+        notes: { type: ["string","null"] }
+        attachmentUrl: { type: ["string","null"] }
+
+    LedgerTransaction:
+      type: object
+      required: [id, accountId, date, description, debit, credit, balance]
+      properties:
+        id: { type: integer }
+        accountId: { type: integer }
+        journalEntryId: { type: integer }
+        entryNumber: { type: ["string","null"] }
+        date: { type: string }
+        description: { type: string }
+        debit: { type: number }
+        credit: { type: number }
+        balance: { type: number }
+        referenceType: { type: ["string","null"] }
+        referenceId: { type: ["integer","null"] }
+        referenceNumber: { type: ["string","null"] }
+        partyType: { type: ["string","null"] }
+        partyId: { type: ["integer","null"] }
+        partyName: { type: ["string","null"] }
+        createdAt: { type: string, format: date-time }
+
+    TrialBalanceRow:
+      type: object
+      required: [accountId, code, name, type, debit, credit, balance]
+      properties:
+        accountId: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        type: { type: string }
+        group: { type: ["string","null"] }
+        debit: { type: number }
+        credit: { type: number }
+        balance: { type: number }
+
+    ProfitLossReport:
+      type: object
+      required: [income, expenses, grossProfit, netProfit]
+      properties:
+        income:
+          type: array
+          items: { $ref: "#/components/schemas/TrialBalanceRow" }
+        expenses:
+          type: array
+          items: { $ref: "#/components/schemas/TrialBalanceRow" }
+        totalIncome: { type: number }
+        totalExpenses: { type: number }
+        grossProfit: { type: number }
+        netProfit: { type: number }
+        dateFrom: { type: string }
+        dateTo: { type: string }
+
+    CashSummary:
+      type: object
+      required: [openingBalance, totalIn, totalOut, closingBalance]
+      properties:
+        openingBalance: { type: number }
+        totalIn: { type: number }
+        totalOut: { type: number }
+        closingBalance: { type: number }
+        transactions:
+          type: array
+          items: { $ref: "#/components/schemas/LedgerTransaction" }
+
+    OutstandingParty:
+      type: object
+      required: [partyId, partyName, partyType, totalInvoiced, totalPaid, balance]
+      properties:
+        partyId: { type: integer }
+        partyName: { type: string }
+        partyType: { type: string }
+        totalInvoiced: { type: number }
+        totalPaid: { type: number }
+        balance: { type: number }
+        oldestDue: { type: ["string","null"] }
+
+    GstSummaryReport:
+      type: object
+      required: [outputGst, inputGst, netPayable, dateFrom, dateTo]
+      properties:
+        outputGst: { type: number }
+        inputGst: { type: number }
+        netPayable: { type: number }
+        salesCount: { type: integer }
+        purchaseCount: { type: integer }
+        dateFrom: { type: string }
+        dateTo: { type: string }
+
+    VoidJournalEntryInput:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string }
+
     # ─── CASHIER SESSION SCHEMAS ──────────────────────────────────────────────
-    OpenSessionInput:
+    OpenSessionInput: # placeholder keeps diff minimal
       type: object
       required: [openingCash]
       properties:
