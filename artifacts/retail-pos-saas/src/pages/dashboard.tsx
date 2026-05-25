@@ -85,13 +85,13 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topProducts?.map((product) => (
-                <div key={product.productId} className="flex items-center justify-between">
+              {topProducts?.map((product, i) => (
+                <div key={product.productId ?? product.productName ?? i} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">{product.productName}</p>
                     <p className="text-xs text-muted-foreground">{product.totalSold} sold</p>
                   </div>
-                  <div className="font-bold text-sm">${product.totalRevenue.toFixed(2)}</div>
+                  <div className="font-bold text-sm">${(parseFloat(String(product.totalRevenue)) || 0).toFixed(2)}</div>
                 </div>
               ))}
             </div>
