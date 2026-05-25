@@ -1,12 +1,13 @@
 import React from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "wouter";
+import { Link, useRoute } from "wouter";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { Home, Package, ShoppingCart, Tags, Users, Settings, LogOut, Warehouse, Truck, ShoppingBag, MonitorSmartphone, UserRound, BookOpen, Receipt, FileText, CreditCard, BarChart3, Landmark, LineChart } from "lucide-react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, logout } = useAuth();
+  const [isReports] = useRoute("/reports");
 
   const { data: user } = useGetMe({ query: { enabled: isAuthenticated, queryKey: getGetMeQueryKey() } });
 
@@ -164,10 +165,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuButton>
           </div>
         </Sidebar>
-        <main className="flex-1 overflow-auto bg-muted/20">
-          <div className="h-full p-8 max-w-7xl mx-auto">
-            {children}
-          </div>
+        <main className="flex-1 overflow-hidden bg-muted/20">
+          {isReports ? (
+            <div className="h-full overflow-hidden">
+              {children}
+            </div>
+          ) : (
+            <div className="h-full overflow-auto p-6 max-w-7xl mx-auto">
+              {children}
+            </div>
+          )}
         </main>
       </div>
     </SidebarProvider>
