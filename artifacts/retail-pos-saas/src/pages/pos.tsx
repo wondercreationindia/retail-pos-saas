@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import {
   useListProducts,
+  useListCategories,
   useListCustomers,
   useCreateSale,
   useListHeldBills,
   useCreateHeldBill,
   useDeleteHeldBill,
   getListHeldBillsQueryKey,
+  useGetMe,
+  getGetMeQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Search,
   ShoppingCart,
@@ -31,7 +36,12 @@ import {
   Banknote,
   Smartphone,
   Printer,
+  LayoutDashboard,
+  Clock,
+  ChevronRight,
 } from "lucide-react";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type Product = {
   id: number;
@@ -70,9 +80,17 @@ type CartItem = {
   total: number;
 };
 
-type PaymentLine = { method: "cash" | "card" | "upi" | "credit"; amount: number; reference?: string };
+type PaymentLine = {
+  method: "cash" | "card" | "upi" | "credit";
+  amount: number;
+  reference?: string;
+};
 
-function calcItem(item: Omit<CartItem, "discountAmount" | "gstAmount" | "subtotal" | "total">): CartItem {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function calcItem(
+  item: Omit<CartItem, "discountAmount" | "gstAmount" | "subtotal" | "total">
+): CartItem {
   const base = item.unitPrice * item.quantity;
   const discountAmount = Math.round((base * item.discountPct) / 100 * 100) / 100;
   const afterDiscount = base - discountAmount;
@@ -89,6 +107,8 @@ function cartTotals(items: CartItem[]) {
   return { subtotal, discountAmount, taxAmount, total };
 }
 
+// ─── Thermal Receipt ─────────────────────────────────────────────────────────
+
 function ThermalReceipt({
   sale,
   items,
@@ -96,7 +116,7 @@ function ThermalReceipt({
   customer,
   onClose,
 }: {
-  sale: { saleNumber: string; total: number; paidAmount: number; changeAmount: number; createdAt?: string };
+  sale: { saleNumber: string; total: number; paidAmount: number; changeAmount: number };
   items: CartItem[];
   payments: PaymentLine[];
   customer?: Customer | null;
@@ -106,25 +126,24 @@ function ThermalReceipt({
 
   const handlePrint = () => {
     const content = printRef.current?.innerHTML ?? "";
-    const win = window.open("", "_blank", "width=400,height=700");
+    const win = window.open("", "_blank", "width=380,height=700");
     if (!win) return;
     win.document.write(`
       <html><head><title>Receipt</title>
       <style>
-        body { font-family: monospace; font-size: 12px; margin: 0; padding: 10px; width: 300px; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 12px; width: 302px; }
         .center { text-align: center; }
-        .right { text-align: right; }
         hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
         table { width: 100%; border-collapse: collapse; }
-        td { padding: 2px 0; }
+        td { padding: 2px 0; font-size: 11px; }
         .bold { font-weight: bold; }
-        .total-row td { font-weight: bold; border-top: 1px solid #000; }
+        @media print { @page { margin: 0; size: 80mm auto; } }
       </style></head><body>${content}</body></html>
     `);
     win.document.close();
     win.focus();
-    win.print();
-    win.close();
+    setTimeout(() => { win.print(); win.close(); }, 250);
   };
 
   const { subtotal, discountAmount, taxAmount, total } = cartTotals(items);
@@ -134,57 +153,85 @@ function ThermalReceipt({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Receipt className="h-4 w-4" /> Receipt Preview</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Receipt className="h-4 w-4" /> Receipt Preview
+          </DialogTitle>
         </DialogHeader>
-        <div ref={printRef} className="font-mono text-xs border p-4 bg-white rounded">
-          <div className="text-center font-bold text-sm mb-1">RETAIL POS</div>
-          <div className="text-center text-xs mb-2">{now.toLocaleString()}</div>
-          <hr className="border-dashed border-gray-400 my-1" />
-          <div className="text-xs">Receipt#: {sale.saleNumber}</div>
-          {customer && <div className="text-xs">Customer: {customer.name}</div>}
-          <hr className="border-dashed border-gray-400 my-1" />
-          <table className="w-full text-xs">
+        <div
+          ref={printRef}
+          className="font-mono text-xs border rounded p-4 bg-white max-h-80 overflow-y-auto"
+        >
+          <div className="center bold text-sm">RETAIL POS</div>
+          <div className="center text-xs mb-1">{now.toLocaleString()}</div>
+          <hr />
+          <div>Receipt: <strong>{sale.saleNumber}</strong></div>
+          {customer && <div>Customer: {customer.name}</div>}
+          <hr />
+          <table>
             <thead>
-              <tr><td className="font-bold">Item</td><td className="text-right font-bold">Qty</td><td className="text-right font-bold">Price</td><td className="text-right font-bold">Amt</td></tr>
+              <tr>
+                <td className="bold">Item</td>
+                <td align="right" className="bold">Qty</td>
+                <td align="right" className="bold">Rate</td>
+                <td align="right" className="bold">Amt</td>
+              </tr>
             </thead>
             <tbody>
               {items.map((item, i) => (
                 <tr key={i}>
-                  <td>{item.productName}</td>
-                  <td className="text-right">{item.quantity}</td>
-                  <td className="text-right">₹{item.unitPrice.toFixed(2)}</td>
-                  <td className="text-right">₹{item.total.toFixed(2)}</td>
+                  <td style={{ maxWidth: 100 }}>{item.productName}</td>
+                  <td align="right">{item.quantity}</td>
+                  <td align="right">₹{item.unitPrice.toFixed(2)}</td>
+                  <td align="right">₹{item.total.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <hr className="border-dashed border-gray-400 my-1" />
-          <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
-          {discountAmount > 0 && <div className="flex justify-between"><span>Discount</span><span>-₹{discountAmount.toFixed(2)}</span></div>}
-          {taxAmount > 0 && <div className="flex justify-between"><span>GST</span><span>₹{taxAmount.toFixed(2)}</span></div>}
-          <div className="flex justify-between font-bold border-t border-dashed border-gray-400 pt-1 mt-1">
+          <hr />
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span>
+          </div>
+          {discountAmount > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Discount</span><span>-₹{discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+          {taxAmount > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>GST</span><span>₹{taxAmount.toFixed(2)}</span>
+            </div>
+          )}
+          <hr />
+          <div style={{ display: "flex", justifyContent: "space-between" }} className="bold">
             <span>TOTAL</span><span>₹{total.toFixed(2)}</span>
           </div>
-          <hr className="border-dashed border-gray-400 my-1" />
+          <hr />
           {payments.map((p, i) => (
-            <div key={i} className="flex justify-between text-xs capitalize">
-              <span>{p.method}</span><span>₹{p.amount.toFixed(2)}</span>
+            <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ textTransform: "capitalize" }}>{p.method}</span>
+              <span>₹{p.amount.toFixed(2)}</span>
             </div>
           ))}
-          {sale.changeAmount > 0 && (
-            <div className="flex justify-between text-xs"><span>Change</span><span>₹{sale.changeAmount.toFixed(2)}</span></div>
+          {sale.changeAmount > 0.001 && (
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Change</span><span>₹{sale.changeAmount.toFixed(2)}</span>
+            </div>
           )}
-          <hr className="border-dashed border-gray-400 my-1" />
-          <div className="text-center text-xs mt-2">Thank you for shopping!</div>
+          <hr />
+          <div className="center" style={{ marginTop: 8 }}>Thank you for shopping!</div>
         </div>
-        <div className="flex gap-2 mt-2">
-          <Button className="flex-1" onClick={handlePrint}><Printer className="h-4 w-4 mr-2" />Print</Button>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={handlePrint}>
+            <Printer className="h-4 w-4 mr-2" />Print
+          </Button>
           <Button variant="outline" className="flex-1" onClick={onClose}>Close</Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+// ─── Payment Modal ────────────────────────────────────────────────────────────
 
 function PaymentModal({
   total,
@@ -197,8 +244,9 @@ function PaymentModal({
   onClose: () => void;
   loading: boolean;
 }) {
-  const [payments, setPayments] = useState<PaymentLine[]>([{ method: "cash", amount: total, reference: "" }]);
-  const [cashGiven, setCashGiven] = useState(total.toFixed(2));
+  const [payments, setPayments] = useState<PaymentLine[]>([
+    { method: "cash", amount: total, reference: "" },
+  ]);
 
   const totalPaid = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const change = Math.max(0, totalPaid - total);
@@ -208,15 +256,24 @@ function PaymentModal({
     setPayments((prev) => [...prev, { method, amount: remaining, reference: "" }]);
   };
 
-  const updatePayment = (idx: number, field: keyof PaymentLine, value: string | number) => {
-    setPayments((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: field === "amount" ? parseFloat(String(value)) || 0 : value } : p)));
+  const updatePayment = (
+    idx: number,
+    field: keyof PaymentLine,
+    value: string | number
+  ) => {
+    setPayments((prev) =>
+      prev.map((p, i) =>
+        i === idx
+          ? { ...p, [field]: field === "amount" ? parseFloat(String(value)) || 0 : value }
+          : p
+      )
+    );
   };
 
-  const removePayment = (idx: number) => {
+  const removePayment = (idx: number) =>
     setPayments((prev) => prev.filter((_, i) => i !== idx));
-  };
 
-  const methodIcons: Record<string, React.ReactNode> = {
+  const methodIcon: Record<string, React.ReactNode> = {
     cash: <Banknote className="h-4 w-4" />,
     card: <CreditCard className="h-4 w-4" />,
     upi: <Smartphone className="h-4 w-4" />,
@@ -230,67 +287,113 @@ function PaymentModal({
           <DialogTitle>Payment — ₹{total.toFixed(2)}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          {/* Quick amount buttons */}
+          <div className="flex gap-2 flex-wrap">
+            {[100, 200, 500, 1000, 2000].map((amt) => (
+              <Button
+                key={amt}
+                variant="outline"
+                size="sm"
+                onClick={() => setPayments([{ method: "cash", amount: amt, reference: "" }])}
+              >
+                ₹{amt}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPayments([{ method: "cash", amount: total, reference: "" }])}
+            >
+              Exact
+            </Button>
+          </div>
+
+          {/* Payment lines */}
           {payments.map((p, idx) => (
             <div key={idx} className="flex items-center gap-2">
-              <div className="flex items-center gap-1 capitalize w-28 text-sm font-medium">
-                {methodIcons[p.method]} {p.method}
+              <div className="flex items-center gap-1.5 w-24 text-sm font-medium capitalize shrink-0">
+                {methodIcon[p.method]}
+                <span>{p.method}</span>
               </div>
               <Input
                 type="number"
                 min={0}
                 step="0.01"
-                value={p.amount}
+                value={p.amount || ""}
                 onChange={(e) => updatePayment(idx, "amount", e.target.value)}
-                className="w-32"
+                className="w-28 shrink-0"
               />
               {(p.method === "card" || p.method === "upi") && (
                 <Input
                   placeholder="Ref / UTR"
                   value={p.reference ?? ""}
                   onChange={(e) => updatePayment(idx, "reference", e.target.value)}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 />
               )}
               {payments.length > 1 && (
-                <Button variant="ghost" size="icon" onClick={() => removePayment(idx)}><X className="h-4 w-4" /></Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => removePayment(idx)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               )}
             </div>
           ))}
 
-          <div className="flex gap-2 flex-wrap">
+          {/* Add split payment */}
+          <div className="flex gap-2">
             {(["card", "upi", "credit"] as PaymentLine["method"][]).map((m) => (
-              <Button key={m} variant="outline" size="sm" onClick={() => addPayment(m)} className="capitalize">
-                {methodIcons[m]} <span className="ml-1">{m}</span>
+              <Button
+                key={m}
+                variant="outline"
+                size="sm"
+                onClick={() => addPayment(m)}
+                className="capitalize text-xs"
+              >
+                {methodIcon[m]}
+                <span className="ml-1">+ {m}</span>
               </Button>
             ))}
           </div>
 
-          <div className="border-t pt-3 space-y-1 text-sm">
-            <div className="flex justify-between"><span>Total Due</span><span className="font-bold">₹{total.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Total Paid</span><span>₹{totalPaid.toFixed(2)}</span></div>
-            {remaining > 0.001 && <div className="flex justify-between text-red-600"><span>Remaining</span><span>₹{remaining.toFixed(2)}</span></div>}
-            {change > 0.001 && <div className="flex justify-between text-green-600"><span>Change</span><span>₹{change.toFixed(2)}</span></div>}
+          {/* Summary */}
+          <div className="rounded-lg border p-3 space-y-1 text-sm bg-muted/30">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total Due</span>
+              <span className="font-bold">₹{total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total Paid</span>
+              <span>₹{totalPaid.toFixed(2)}</span>
+            </div>
+            {remaining > 0.001 && (
+              <div className="flex justify-between text-red-600 font-medium">
+                <span>Remaining</span>
+                <span>₹{remaining.toFixed(2)}</span>
+              </div>
+            )}
+            {change > 0.001 && (
+              <div className="flex justify-between text-green-600 font-medium">
+                <span>Change to Return</span>
+                <span>₹{change.toFixed(2)}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2">
             <Button
-              className="flex-1"
+              className="flex-1 h-11 text-base font-bold"
               disabled={remaining > 0.001 || loading}
               onClick={() => onConfirm(payments, change)}
             >
-              {loading ? "Processing..." : "Confirm Payment"}
+              {loading ? "Processing…" : `Confirm ₹${total.toFixed(2)}`}
             </Button>
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-            {[100, 200, 500, 1000].map((amt) => (
-              <Button key={amt} variant="secondary" size="sm" onClick={() => setPayments([{ method: "cash", amount: amt, reference: "" }])}>
-                ₹{amt}
-              </Button>
-            ))}
-            <Button variant="secondary" size="sm" onClick={() => setPayments([{ method: "cash", amount: total, reference: "" }])}>
-              Exact
+            <Button variant="outline" className="h-11" onClick={onClose}>
+              Cancel
             </Button>
           </div>
         </div>
@@ -299,60 +402,106 @@ function PaymentModal({
   );
 }
 
+// ─── Main POS Component ──────────────────────────────────────────────────────
+
 export default function POS() {
   const { toast } = useToast();
+  const { logout } = useAuth();
   const qc = useQueryClient();
 
   const [search, setSearch] = useState("");
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
-  const [lastSale, setLastSale] = useState<{ saleNumber: string; total: number; paidAmount: number; changeAmount: number } | null>(null);
+  const [lastSale, setLastSale] = useState<{
+    saleNumber: string;
+    total: number;
+    paidAmount: number;
+    changeAmount: number;
+  } | null>(null);
   const [lastPayments, setLastPayments] = useState<PaymentLine[]>([]);
   const [showHeldBills, setShowHeldBills] = useState(false);
   const [billLabel, setBillLabel] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const { data: products = [] } = useListProducts({ search: search || undefined });
-  const { data: customers = [] } = useListCustomers({ search: customerSearch || undefined, limit: 20 });
+  // Live clock
+  useEffect(() => {
+    const t = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Auto-focus search on mount
+  useEffect(() => {
+    searchRef.current?.focus();
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "F2") { e.preventDefault(); if (cart.length > 0) setShowHeldBills(true); }
+      if (e.key === "F3") { e.preventDefault(); if (cart.length > 0) setShowPayment(true); }
+      if (e.key === "Escape") {
+        setShowPayment(false);
+        setShowCustomerPicker(false);
+        setShowHeldBills(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [cart.length]);
+
+  const { data: products = [] } = useListProducts({
+    search: search || undefined,
+    categoryId: activeCategoryId ?? undefined,
+  });
+  const { data: categories = [] } = useListCategories();
+  const { data: customers = [] } = useListCustomers({
+    search: customerSearch || undefined,
+  });
   const { data: heldBills = [] } = useListHeldBills();
+  const { data: me } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+
   const createSale = useCreateSale();
   const createHeldBill = useCreateHeldBill();
   const deleteHeldBill = useDeleteHeldBill();
 
   const totals = cartTotals(cart);
 
-  useEffect(() => {
-    searchRef.current?.focus();
-  }, []);
+  // ── Cart actions ────────────────────────────────────────────────────────────
 
   const addToCart = useCallback((product: Product) => {
     const unitPrice = product.salePrice ?? product.price ?? 0;
     const gstRate = product.gstRate ?? 0;
     setCart((prev) => {
-      const existing = prev.findIndex((i) => i.productId === product.id);
-      if (existing >= 0) {
+      const idx = prev.findIndex((i) => i.productId === product.id);
+      if (idx >= 0) {
         const updated = [...prev];
-        updated[existing] = calcItem({ ...updated[existing], quantity: updated[existing].quantity + 1 });
+        updated[idx] = calcItem({ ...updated[idx], quantity: updated[idx].quantity + 1 });
         return updated;
       }
-      return [...prev, calcItem({
-        productId: product.id,
-        productName: product.name,
-        sku: product.sku,
-        barcode: product.barcode,
-        quantity: 1,
-        unitPrice,
-        mrp: product.mrp ? parseFloat(String(product.mrp)) : null,
-        discountPct: 0,
-        gstRate,
-      })];
+      return [
+        ...prev,
+        calcItem({
+          productId: product.id,
+          productName: product.name,
+          sku: product.sku ?? null,
+          barcode: product.barcode ?? null,
+          quantity: 1,
+          unitPrice,
+          mrp: product.mrp ?? null,
+          discountPct: 0,
+          gstRate,
+        }),
+      ];
     });
     setSearch("");
+    setActiveCategoryId(null);
     searchRef.current?.focus();
   }, []);
 
@@ -369,12 +518,16 @@ export default function POS() {
   const updateDiscount = (idx: number, pct: number) => {
     setCart((prev) => {
       const updated = [...prev];
-      updated[idx] = calcItem({ ...updated[idx], discountPct: Math.min(100, Math.max(0, pct)) });
+      updated[idx] = calcItem({
+        ...updated[idx],
+        discountPct: Math.min(100, Math.max(0, pct)),
+      });
       return updated;
     });
   };
 
-  const removeItem = (idx: number) => setCart((prev) => prev.filter((_, i) => i !== idx));
+  const removeItem = (idx: number) =>
+    setCart((prev) => prev.filter((_, i) => i !== idx));
 
   const clearCart = () => {
     setCart([]);
@@ -383,26 +536,44 @@ export default function POS() {
     searchRef.current?.focus();
   };
 
-  const handleBarcodeSearch = (val: string) => {
-    setSearch(val);
-    const found = (products as unknown as Product[]).find((p) => p.barcode === val || p.sku === val);
-    if (found) {
-      addToCart(found);
+  // Barcode / SKU auto-match on Enter
+  const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const val = search.trim();
+      // Try exact barcode / SKU match first
+      const exact = (products as unknown as Product[]).find(
+        (p) => p.barcode === val || p.sku === val
+      );
+      if (exact) {
+        addToCart(exact);
+        return;
+      }
+      // Fall back: add first visible result
+      const first = (products as unknown as Product[])[0];
+      if (first) addToCart(first);
     }
   };
+
+  // ── Hold / Resume ───────────────────────────────────────────────────────────
 
   const holdBill = async () => {
     if (cart.length === 0) return;
     await createHeldBill.mutateAsync({
-      data: { label: billLabel || `Bill ${new Date().toLocaleTimeString()}`, cartData: { cart, customer: selectedCustomer } },
+      data: {
+        label: billLabel || `Bill ${currentTime.toLocaleTimeString()}`,
+        cartData: { cart, customer: selectedCustomer },
+      },
     });
     qc.invalidateQueries({ queryKey: getListHeldBillsQueryKey() });
     clearCart();
     setBillLabel("");
-    toast({ title: "Bill held", description: "You can resume it anytime." });
+    toast({ title: "Bill held", description: "Resume it anytime from Held Bills." });
   };
 
-  const resumeBill = (bill: { id: number; cartData: Record<string, unknown> }) => {
+  const resumeBill = (bill: {
+    id: number;
+    cartData: Record<string, unknown>;
+  }) => {
     const data = bill.cartData as { cart: CartItem[]; customer?: Customer | null };
     setCart(data.cart ?? []);
     setSelectedCustomer(data.customer ?? null);
@@ -411,6 +582,8 @@ export default function POS() {
     setShowHeldBills(false);
     toast({ title: "Bill resumed" });
   };
+
+  // ── Complete Sale ───────────────────────────────────────────────────────────
 
   const handlePaymentConfirm = async (payments: PaymentLine[], change: number) => {
     const paidAmount = payments.reduce((s, p) => s + p.amount, 0);
@@ -430,265 +603,536 @@ export default function POS() {
           loyaltyPointsRedeemed: 0,
         },
       });
-      setLastSale({ saleNumber: sale.saleNumber, total: totals.total, paidAmount, changeAmount: change });
-      setLastPayments(payments);
+      const completedCart = [...cart];
+      const completedPayments = [...payments];
+      setLastSale({
+        saleNumber: sale.saleNumber,
+        total: totals.total,
+        paidAmount,
+        changeAmount: change,
+      });
+      setLastPayments(completedPayments);
       setShowPayment(false);
-      setShowReceipt(true);
       clearCart();
-      toast({ title: "Sale completed!", description: `${sale.saleNumber} — ₹${totals.total.toFixed(2)}` });
+      // Show receipt with the completed items
+      setCart(completedCart); // temporarily restore for receipt
+      setShowReceipt(true);
+      toast({
+        title: "Sale completed!",
+        description: `${sale.saleNumber} — ₹${totals.total.toFixed(2)}`,
+      });
     } catch {
       toast({ title: "Sale failed", variant: "destructive" });
     }
   };
 
-  const filteredProducts = search
-    ? (products as unknown as Product[]).filter(
-        (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.sku?.toLowerCase().includes(search.toLowerCase()) ||
-          p.barcode?.includes(search)
-      )
-    : (products as unknown as Product[]);
+  const handleReceiptClose = () => {
+    setShowReceipt(false);
+    clearCart();
+  };
+
+  // ── Filtered products ───────────────────────────────────────────────────────
+
+  const filteredProducts = (products as unknown as Product[]);
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-[calc(100vh-64px)] gap-0 -m-8 overflow-hidden">
-      {/* ── LEFT: Product Search ─────────────────────────────────── */}
-      <div className="flex flex-col w-[55%] border-r bg-background overflow-hidden">
-        {/* Header */}
-        <div className="p-3 border-b flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              ref={searchRef}
-              placeholder="Search by name, SKU or scan barcode..."
-              className="pl-9"
-              value={search}
-              onChange={(e) => handleBarcodeSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && filteredProducts.length === 1) {
-                  addToCart(filteredProducts[0]);
-                }
-              }}
-            />
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
+
+      {/* ═══ TOP BAR ═══════════════════════════════════════════════════════ */}
+      <header className="flex items-center justify-between px-4 h-12 border-b bg-card shrink-0 z-10">
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground h-8 px-2">
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Dashboard</span>
+            </Button>
+          </Link>
+          <ChevronRight className="h-3 w-3 text-muted-foreground hidden sm:block" />
+          <span className="font-bold text-sm text-foreground">POS Billing</span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Live clock */}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground hidden sm:flex">
+            <Clock className="h-3.5 w-3.5" />
+            {currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            <span className="opacity-60">{currentTime.toLocaleDateString()}</span>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setShowHeldBills(true)} className="relative">
-            <Pause className="h-4 w-4 mr-1" /> Held
+
+          {/* Cashier */}
+          {me && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground hidden md:flex">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                {me.name?.charAt(0) ?? "U"}
+              </div>
+              <span>{me.name}</span>
+            </div>
+          )}
+
+          {/* Held bills badge */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="relative h-8 gap-1.5 text-xs"
+            onClick={() => setShowHeldBills(true)}
+          >
+            <Pause className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Held</span>
             {heldBills.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">{heldBills.length}</span>
+              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                {heldBills.length}
+              </span>
             )}
           </Button>
-        </div>
 
-        {/* Product grid */}
-        <div className="flex-1 overflow-y-auto p-3">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {(filteredProducts as Product[]).map((product) => (
-              <Card
-                key={product.id}
-                className="cursor-pointer hover:border-primary hover:shadow-md transition-all select-none"
-                onClick={() => addToCart(product)}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs text-muted-foreground"
+            onClick={logout}
+          >
+            Logout
+          </Button>
+        </div>
+      </header>
+
+      {/* ═══ MAIN CONTENT ══════════════════════════════════════════════════ */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+
+        {/* ── LEFT PANEL: Products ──────────────────────────────────────── */}
+        <div className="flex flex-col flex-1 min-w-0 border-r overflow-hidden">
+
+          {/* Search bar */}
+          <div className="shrink-0 px-3 pt-3 pb-2 border-b bg-background">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                ref={searchRef}
+                placeholder="Search by name, SKU or scan barcode…"
+                className="pl-9 h-10 text-sm"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={handleSearchKey}
+              />
+            </div>
+          </div>
+
+          {/* Category filter pills */}
+          <div className="shrink-0 flex gap-1.5 px-3 py-2 overflow-x-auto border-b bg-background">
+            <button
+              onClick={() => setActiveCategoryId(null)}
+              className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                activeCategoryId === null
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              All
+            </button>
+            {(categories as { id: number; name: string }[]).map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() =>
+                  setActiveCategoryId((c) => (c === cat.id ? null : cat.id))
+                }
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  activeCategoryId === cat.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
               >
-                <CardContent className="p-3">
-                  <div className="font-medium text-sm leading-tight line-clamp-2">{product.name}</div>
-                  {product.sku && <div className="text-xs text-muted-foreground mt-0.5">{product.sku}</div>}
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="font-bold text-primary">₹{(product.salePrice ?? product.price ?? 0).toFixed(2)}</span>
-                    <span className={`text-xs ${(product.stock ?? 0) < 5 ? "text-red-500" : "text-muted-foreground"}`}>
-                      Qty: {product.stock ?? 0}
-                    </span>
-                  </div>
-                  {product.gstRate && parseFloat(String(product.gstRate)) > 0 && (
-                    <div className="text-xs text-muted-foreground">GST: {product.gstRate}%</div>
-                  )}
-                </CardContent>
-              </Card>
+                {cat.name}
+              </button>
             ))}
-            {filteredProducts.length === 0 && search && (
-              <div className="col-span-3 text-center text-muted-foreground py-12 text-sm">No products found for "{search}"</div>
-            )}
           </div>
-        </div>
-      </div>
 
-      {/* ── RIGHT: Cart ──────────────────────────────────────────── */}
-      <div className="flex flex-col w-[45%] bg-muted/20 overflow-hidden">
-        {/* Customer bar */}
-        <div className="p-3 border-b bg-background">
-          {selectedCustomer ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-primary" />
-                <div>
-                  <div className="font-medium text-sm">{selectedCustomer.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {selectedCustomer.phone} · {selectedCustomer.loyaltyPoints ?? 0} pts
-                  </div>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedCustomer(null)}><X className="h-4 w-4" /></Button>
-            </div>
-          ) : (
-            <Button variant="outline" size="sm" className="w-full" onClick={() => setShowCustomerPicker(true)}>
-              <User className="h-4 w-4 mr-2" /> Select Customer (Walk-in)
-            </Button>
-          )}
-        </div>
-
-        {/* Cart items */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <ShoppingCart className="h-12 w-12 mb-3 opacity-30" />
-              <p className="text-sm">Cart is empty</p>
-              <p className="text-xs">Search or scan a product</p>
-            </div>
-          ) : (
-            cart.map((item, idx) => (
-              <Card key={idx} className="p-3">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="font-medium text-sm flex-1 leading-tight">{item.productName}</div>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={() => removeItem(idx)}>
-                    <Trash2 className="h-3 w-3 text-red-500" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1">
-                    <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQty(idx, -1)}><Minus className="h-3 w-3" /></Button>
-                    <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQty(idx, 1)}><Plus className="h-3 w-3" /></Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-xs text-muted-foreground">
-                      <span>₹{item.unitPrice.toFixed(2)}</span>
-                      {item.gstRate > 0 && <span className="ml-1 text-blue-500">+{item.gstRate}% GST</span>}
+          {/* Product grid — scrollable */}
+          <div className="flex-1 overflow-y-auto p-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+              {filteredProducts.map((product) => {
+                const price = product.salePrice ?? product.price ?? 0;
+                const lowStock = (product.stock ?? 0) < 5;
+                const outOfStock = (product.stock ?? 0) <= 0;
+                return (
+                  <button
+                    key={product.id}
+                    disabled={outOfStock}
+                    onClick={() => addToCart(product)}
+                    className={`text-left rounded-lg border p-3 transition-all select-none focus:outline-none focus:ring-2 focus:ring-primary ${
+                      outOfStock
+                        ? "opacity-40 cursor-not-allowed bg-muted"
+                        : "bg-card hover:border-primary hover:shadow-md active:scale-95 cursor-pointer"
+                    }`}
+                  >
+                    <div className="font-medium text-sm leading-tight line-clamp-2 mb-1">
+                      {product.name}
                     </div>
-                    <div className="font-bold text-sm">₹{item.total.toFixed(2)}</div>
-                  </div>
+                    {product.sku && (
+                      <div className="text-[10px] text-muted-foreground">{product.sku}</div>
+                    )}
+                    <div className="mt-2 flex items-end justify-between gap-1">
+                      <span className="font-bold text-primary text-sm">
+                        ₹{price.toFixed(2)}
+                      </span>
+                      <span
+                        className={`text-[10px] font-medium ${
+                          outOfStock
+                            ? "text-red-600"
+                            : lowStock
+                            ? "text-orange-500"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {outOfStock ? "Out" : `${product.stock ?? 0} left`}
+                      </span>
+                    </div>
+                    {product.gstRate ? (
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        GST {product.gstRate}%
+                      </div>
+                    ) : null}
+                  </button>
+                );
+              })}
+              {filteredProducts.length === 0 && (
+                <div className="col-span-4 text-center text-muted-foreground py-16 text-sm">
+                  {search
+                    ? `No products match "${search}"`
+                    : "No products found"}
                 </div>
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="text-xs text-muted-foreground">Disc%:</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={item.discountPct}
-                    onChange={(e) => updateDiscount(idx, parseFloat(e.target.value) || 0)}
-                    className="h-6 w-16 text-xs px-1"
-                  />
-                  {item.discountAmount > 0 && (
-                    <span className="text-xs text-green-600">-₹{item.discountAmount.toFixed(2)}</span>
-                  )}
-                </div>
-              </Card>
-            ))
-          )}
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Totals + actions */}
-        <div className="border-t bg-background p-3 space-y-2">
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between text-muted-foreground">
-              <span>Subtotal</span><span>₹{totals.subtotal.toFixed(2)}</span>
+        {/* ── RIGHT PANEL: Cart ─────────────────────────────────────────── */}
+        <div className="flex flex-col w-80 lg:w-96 shrink-0 overflow-hidden bg-muted/10">
+
+          {/* Customer selector */}
+          <div className="shrink-0 px-3 pt-3 pb-2 border-b bg-background">
+            {selectedCustomer ? (
+              <div className="flex items-center justify-between rounded-lg border px-3 py-2 bg-primary/5 border-primary/20">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                    <User className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm truncate">{selectedCustomer.name}</div>
+                    {selectedCustomer.loyaltyPoints ? (
+                      <div className="text-[10px] text-muted-foreground">
+                        {selectedCustomer.loyaltyPoints} pts
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={() => setSelectedCustomer(null)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-9 text-xs gap-1.5 text-muted-foreground"
+                onClick={() => setShowCustomerPicker(true)}
+              >
+                <User className="h-3.5 w-3.5" />
+                Walk-in Customer
+              </Button>
+            )}
+          </div>
+
+          {/* Cart items — scrollable */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2 space-y-2">
+            {cart.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
+                <ShoppingCart className="h-10 w-10 mb-3 opacity-20" />
+                <p className="text-sm">Cart is empty</p>
+                <p className="text-xs mt-1 opacity-70">Search or click a product</p>
+              </div>
+            ) : (
+              cart.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-lg border bg-card p-2.5"
+                >
+                  <div className="flex items-start justify-between gap-1 mb-1.5">
+                    <div className="font-medium text-sm leading-tight flex-1 min-w-0">
+                      {item.productName}
+                    </div>
+                    <button
+                      onClick={() => removeItem(idx)}
+                      className="shrink-0 text-muted-foreground hover:text-red-500 transition-colors p-0.5"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Qty stepper */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => updateQty(idx, -1)}
+                        className="w-6 h-6 rounded border flex items-center justify-center hover:bg-muted transition-colors"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="w-8 text-center text-sm font-semibold">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => updateQty(idx, 1)}
+                        className="w-6 h-6 rounded border flex items-center justify-center hover:bg-muted transition-colors"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground">
+                        ₹{item.unitPrice.toFixed(2)}
+                        {item.gstRate > 0 && (
+                          <span className="ml-1 text-blue-500">+{item.gstRate}%</span>
+                        )}
+                      </div>
+                      <div className="font-bold text-sm">₹{item.total.toFixed(2)}</div>
+                    </div>
+                  </div>
+
+                  {/* Discount */}
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[10px] text-muted-foreground shrink-0">Disc%</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={item.discountPct || ""}
+                      placeholder="0"
+                      onChange={(e) =>
+                        updateDiscount(idx, parseFloat(e.target.value) || 0)
+                      }
+                      className="w-14 h-5 rounded border text-xs px-1.5 text-center bg-background"
+                    />
+                    {item.discountAmount > 0 && (
+                      <span className="text-[10px] text-green-600 font-medium">
+                        -₹{item.discountAmount.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* ── Fixed Totals + Actions ───────────────────────────────────── */}
+          <div className="shrink-0 border-t bg-background">
+            {/* Totals */}
+            <div className="px-3 py-2.5 space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Subtotal</span>
+                <span>₹{totals.subtotal.toFixed(2)}</span>
+              </div>
+              {totals.discountAmount > 0 && (
+                <div className="flex justify-between text-xs text-green-600">
+                  <span>Discount</span>
+                  <span>-₹{totals.discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {totals.taxAmount > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>GST</span>
+                  <span>₹{totals.taxAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center font-bold text-lg border-t pt-1.5 mt-1">
+                <span>Total</span>
+                <span className="text-primary">₹{totals.total.toFixed(2)}</span>
+              </div>
             </div>
-            {totals.discountAmount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount</span><span>-₹{totals.discountAmount.toFixed(2)}</span>
-              </div>
-            )}
-            {totals.taxAmount > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>GST</span><span>₹{totals.taxAmount.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between font-bold text-lg border-t pt-1">
-              <span>Total</span><span>₹{totals.total.toFixed(2)}</span>
+
+            {/* Action buttons */}
+            <div className="px-3 pb-3 grid grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-9"
+                onClick={clearCart}
+                disabled={cart.length === 0}
+              >
+                <X className="h-3.5 w-3.5 mr-1" />
+                Clear
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-9"
+                onClick={() => setShowHeldBills(true)}
+                disabled={cart.length === 0}
+              >
+                <Pause className="h-3.5 w-3.5 mr-1" />
+                Hold
+              </Button>
+              <Button
+                size="sm"
+                className="h-9 font-bold text-xs"
+                disabled={cart.length === 0}
+                onClick={() => setShowPayment(true)}
+              >
+                <Receipt className="h-3.5 w-3.5 mr-1" />
+                Pay
+              </Button>
+            </div>
+
+            {/* Keyboard hint */}
+            <div className="px-3 pb-2 text-[10px] text-center text-muted-foreground/70">
+              F2 = Hold · F3 = Pay · Enter = Add top result
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1" onClick={clearCart} disabled={cart.length === 0}>
-              <X className="h-4 w-4 mr-1" /> Clear
-            </Button>
-            <Button variant="outline" size="sm" onClick={holdBill} disabled={cart.length === 0}>
-              <Pause className="h-4 w-4 mr-1" /> Hold
-            </Button>
-            <Button className="flex-1" size="sm" disabled={cart.length === 0} onClick={() => setShowPayment(true)}>
-              <Receipt className="h-4 w-4 mr-1" /> Pay ₹{totals.total.toFixed(2)}
-            </Button>
-          </div>
-          <p className="text-xs text-center text-muted-foreground">Press Enter to add top result · F2 = Hold · F3 = Pay</p>
         </div>
       </div>
 
-      {/* ── CUSTOMER PICKER ────────────────────────────────────── */}
+      {/* ═══ MODALS ════════════════════════════════════════════════════════ */}
+
+      {/* Customer Picker */}
       {showCustomerPicker && (
         <Dialog open onOpenChange={() => setShowCustomerPicker(false)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>Select Customer</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Select Customer</DialogTitle>
+            </DialogHeader>
             <Input
-              placeholder="Search customers..."
+              placeholder="Search by name or phone…"
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
-              className="mb-3"
+              className="mb-2"
               autoFocus
             />
-            <div className="space-y-1 max-h-64 overflow-y-auto">
-              <div
-                className="p-2 rounded cursor-pointer hover:bg-muted text-sm font-medium"
-                onClick={() => { setSelectedCustomer(null); setShowCustomerPicker(false); }}
+            <div className="space-y-1 max-h-72 overflow-y-auto">
+              <button
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-sm font-medium transition-colors"
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setShowCustomerPicker(false);
+                }}
               >
                 Walk-in Customer
-              </div>
+              </button>
               {(customers as Customer[]).map((c) => (
-                <div
+                <button
                   key={c.id}
-                  className="p-2 rounded cursor-pointer hover:bg-muted"
-                  onClick={() => { setSelectedCustomer(c); setShowCustomerPicker(false); }}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                  onClick={() => {
+                    setSelectedCustomer(c);
+                    setShowCustomerPicker(false);
+                    setCustomerSearch("");
+                  }}
                 >
                   <div className="font-medium text-sm">{c.name}</div>
-                  <div className="text-xs text-muted-foreground">{c.phone} · {c.loyaltyPoints ?? 0} pts</div>
-                </div>
+                  <div className="text-xs text-muted-foreground">
+                    {c.phone}
+                    {c.loyaltyPoints ? ` · ${c.loyaltyPoints} pts` : ""}
+                  </div>
+                </button>
               ))}
-              {customers.length === 0 && customerSearch && (
-                <div className="text-center text-muted-foreground py-4 text-sm">No customers found</div>
+              {(customers as Customer[]).length === 0 && customerSearch && (
+                <div className="text-center text-muted-foreground py-6 text-sm">
+                  No customers found
+                </div>
               )}
             </div>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* ── HELD BILLS ─────────────────────────────────────────── */}
+      {/* Held Bills */}
       {showHeldBills && (
         <Dialog open onOpenChange={() => setShowHeldBills(false)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle><Play className="h-4 w-4 inline mr-2" />Held Bills</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pause className="h-4 w-4" /> Held Bills
+              </DialogTitle>
+            </DialogHeader>
+
             {cart.length > 0 && (
-              <div className="mb-2 flex gap-2">
-                <Input placeholder="Label (optional)" value={billLabel} onChange={(e) => setBillLabel(e.target.value)} />
-                <Button onClick={holdBill} disabled={createHeldBill.isPending}>Hold Current</Button>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Label (optional)"
+                  value={billLabel}
+                  onChange={(e) => setBillLabel(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  size="sm"
+                  onClick={holdBill}
+                  disabled={createHeldBill.isPending}
+                >
+                  Hold Current
+                </Button>
               </div>
             )}
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {heldBills.length === 0 && <div className="text-center text-muted-foreground py-6 text-sm">No held bills</div>}
-              {(heldBills as { id: number; label: string | null; cartData: Record<string, unknown>; createdAt: string }[]).map((bill) => (
-                <div key={bill.id} className="flex items-center justify-between border rounded p-2">
-                  <div>
-                    <div className="font-medium text-sm">{bill.label ?? "Unnamed bill"}</div>
-                    <div className="text-xs text-muted-foreground">{new Date(bill.createdAt).toLocaleTimeString()}</div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" onClick={() => resumeBill(bill)}><Play className="h-4 w-4 mr-1" />Resume</Button>
-                    <Button size="sm" variant="destructive" onClick={() => { deleteHeldBill.mutate({ id: bill.id }); qc.invalidateQueries({ queryKey: getListHeldBillsQueryKey() }); }}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {heldBills.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8 text-sm">
+                  No held bills
                 </div>
-              ))}
+              ) : (
+                (
+                  heldBills as {
+                    id: number;
+                    label: string | null;
+                    cartData: Record<string, unknown>;
+                    createdAt: string;
+                  }[]
+                ).map((bill) => (
+                  <div
+                    key={bill.id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div>
+                      <div className="font-medium text-sm">
+                        {bill.label ?? "Unnamed bill"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(bill.createdAt).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" onClick={() => resumeBill(bill)}>
+                        <Play className="h-3.5 w-3.5 mr-1" />
+                        Resume
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          deleteHeldBill.mutate({ id: bill.id });
+                          qc.invalidateQueries({
+                            queryKey: getListHeldBillsQueryKey(),
+                          });
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* ── PAYMENT MODAL ──────────────────────────────────────── */}
+      {/* Payment */}
       {showPayment && (
         <PaymentModal
           total={totals.total}
@@ -698,14 +1142,14 @@ export default function POS() {
         />
       )}
 
-      {/* ── RECEIPT ─────────────────────────────────────────────── */}
+      {/* Receipt */}
       {showReceipt && lastSale && (
         <ThermalReceipt
           sale={lastSale}
-          items={cart.length > 0 ? cart : []}
+          items={cart}
           payments={lastPayments}
           customer={selectedCustomer}
-          onClose={() => setShowReceipt(false)}
+          onClose={handleReceiptClose}
         />
       )}
     </div>
