@@ -2,7 +2,7 @@ import React from "react";
 import { useGetDashboardSummary, getGetDashboardSummaryQueryKey, useGetSalesByDay, getGetSalesByDayQueryKey, useGetTopProducts, getGetTopProductsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { DollarSign, ShoppingCart, Package, Users } from "lucide-react";
+import { IndianRupee, ShoppingCart, Package, Users } from "lucide-react";
 
 export default function Dashboard() {
   const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary({ query: { queryKey: getGetDashboardSummaryQueryKey() } });
@@ -22,10 +22,10 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Revenue Today</CardTitle>
-            <DollarSign className="w-4 h-4 text-muted-foreground" />
+            <IndianRupee className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${summary?.todayRevenue?.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{summary?.todayRevenue?.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">{summary?.revenueChange}% from yesterday</p>
           </CardContent>
         </Card>
@@ -70,7 +70,7 @@ export default function Dashboard() {
                 <LineChart data={sales}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={(value) => `$${value}`} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${value}`} />
                   <Tooltip />
                   <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                 </LineChart>
@@ -91,7 +91,7 @@ export default function Dashboard() {
                     <p className="font-medium text-sm">{product.productName}</p>
                     <p className="text-xs text-muted-foreground">{product.totalSold} sold</p>
                   </div>
-                  <div className="font-bold text-sm">${(parseFloat(String(product.totalRevenue)) || 0).toFixed(2)}</div>
+                  <div className="font-bold text-sm">₹{(parseFloat(String(product.totalRevenue)) || 0).toFixed(2)}</div>
                 </div>
               ))}
             </div>
