@@ -96,10 +96,10 @@ export default function Products() {
   const [activeTab, setActiveTab] = useState<Tab>("core");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const { data: products, isLoading } = useListProducts({
-    params: { query: { search: search || undefined, categoryId: categoryFilter ? Number(categoryFilter) : undefined } },
-    query: { queryKey: getListProductsQueryKey() },
-  });
+  const { data: products, isLoading } = useListProducts(
+    { search: search || undefined, categoryId: categoryFilter ? Number(categoryFilter) : undefined },
+    { query: { queryKey: getListProductsQueryKey({ search: search || undefined, categoryId: categoryFilter ? Number(categoryFilter) : undefined }) } },
+  );
   const { data: categories } = useListCategories({ query: { queryKey: getListCategoriesQueryKey() } });
 
   const createMutation = useCreateProduct();
@@ -138,15 +138,15 @@ export default function Products() {
       stock: String(p.stock),
       minStockAlert: p.minStockAlert != null ? String(p.minStockAlert) : "10",
       maxStock: p.maxStock != null ? String(p.maxStock) : "",
-      trackInventory: p.trackInventory,
-      allowNegativeStock: p.allowNegativeStock,
+      trackInventory: p.trackInventory ?? false,
+      allowNegativeStock: p.allowNegativeStock ?? false,
       categoryId: p.categoryId != null ? String(p.categoryId) : "",
       imageUrl: p.imageUrl ?? "",
       slug: p.slug ?? "",
       seoTitle: p.seoTitle ?? "",
       seoDescription: p.seoDescription ?? "",
-      publishOnline: p.publishOnline,
-      featuredProduct: p.featuredProduct,
+      publishOnline: p.publishOnline ?? false,
+      featuredProduct: p.featuredProduct ?? false,
       barcodeType: p.barcodeType ?? "CODE128",
       labelWidth: p.labelWidth != null ? String(p.labelWidth) : "",
       labelHeight: p.labelHeight != null ? String(p.labelHeight) : "",
@@ -205,7 +205,7 @@ export default function Products() {
     };
 
     if (editId) {
-      await updateMutation.mutateAsync({ params: { path: { id: editId } }, data: payload });
+      await updateMutation.mutateAsync({ id: editId, data: payload });
     } else {
       await createMutation.mutateAsync({ data: payload as Parameters<typeof createMutation.mutateAsync>[0]["data"] });
     }
@@ -215,7 +215,7 @@ export default function Products() {
 
   async function handleDelete() {
     if (!deleteId) return;
-    await deleteMutation.mutateAsync({ params: { path: { id: deleteId } } });
+    await deleteMutation.mutateAsync({ id: deleteId });
     invalidate();
     setDeleteId(null);
   }

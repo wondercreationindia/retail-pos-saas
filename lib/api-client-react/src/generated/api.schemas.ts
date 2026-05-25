@@ -414,6 +414,300 @@ export interface TopProduct {
   totalRevenue: number;
 }
 
+export interface Supplier {
+  id: number;
+  tenantId: number;
+  name: string;
+  /** @nullable */
+  code?: string | null;
+  /** @nullable */
+  contactName?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  pincode?: string | null;
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  gstNumber?: string | null;
+  /** @nullable */
+  panNumber?: string | null;
+  /** @nullable */
+  paymentTerms?: number | null;
+  /** @nullable */
+  creditLimit?: number | null;
+  /** @nullable */
+  openingBalance?: number | null;
+  /** @nullable */
+  currentBalance?: number | null;
+  /** @nullable */
+  notes?: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupplierInput {
+  name: string;
+  code?: string;
+  contactName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+  gstNumber?: string;
+  panNumber?: string;
+  paymentTerms?: number;
+  creditLimit?: number;
+  openingBalance?: number;
+  notes?: string;
+  status?: string;
+}
+
+export interface InventoryOverview {
+  totalProducts: number;
+  activeProducts: number;
+  totalStockValue: number;
+  totalRetailValue: number;
+  lowStockProducts: number;
+  outOfStock: number;
+}
+
+export interface LowStockProduct {
+  id: number;
+  name: string;
+  /** @nullable */
+  sku?: string | null;
+  stock: number;
+  minStockAlert: number;
+  /** @nullable */
+  price?: number | null;
+  /** @nullable */
+  categoryId?: number | null;
+}
+
+export interface InventoryLog {
+  id: number;
+  tenantId: number;
+  productId: number;
+  type: string;
+  /** @nullable */
+  quantity: number | null;
+  /** @nullable */
+  beforeQuantity: number | null;
+  /** @nullable */
+  afterQuantity: number | null;
+  /** @nullable */
+  unitCost?: number | null;
+  /** @nullable */
+  batchNumber?: string | null;
+  /** @nullable */
+  expiryDate?: string | null;
+  /** @nullable */
+  referenceType?: string | null;
+  /** @nullable */
+  referenceId?: number | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdBy?: number | null;
+  createdAt: string;
+}
+
+export type StockAdjustmentInputAdjustmentType = typeof StockAdjustmentInputAdjustmentType[keyof typeof StockAdjustmentInputAdjustmentType];
+
+
+export const StockAdjustmentInputAdjustmentType = {
+  add: 'add',
+  remove: 'remove',
+  damage: 'damage',
+  expiry: 'expiry',
+  recount: 'recount',
+} as const;
+
+export interface StockAdjustmentInput {
+  productId: number;
+  adjustmentType: StockAdjustmentInputAdjustmentType;
+  quantity: number;
+  reason?: string;
+  notes?: string;
+  referenceNumber?: string;
+  unitCost?: number;
+}
+
+export interface StockTransferInput {
+  productId: number;
+  fromLocation?: string;
+  toLocation: string;
+  quantity: number;
+  notes?: string;
+}
+
+export interface PurchaseItemInput {
+  productId?: number;
+  productName?: string;
+  quantity?: number;
+  unitPrice?: number;
+  mrp?: number;
+  gstRate?: number;
+  gstAmount?: number;
+  subtotal?: number;
+  total?: number;
+  batchNumber?: string;
+  expiryDate?: string;
+}
+
+export interface PurchaseInput {
+  supplierId?: number;
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  dueDate?: string;
+  notes?: string;
+  items?: PurchaseItemInput[];
+}
+
+export interface PurchaseUpdateInput {
+  status?: string;
+  paidAmount?: number;
+  paymentMethod?: string;
+  notes?: string;
+}
+
+export interface StockAdjustment {
+  id: number;
+  tenantId: number;
+  productId: number;
+  adjustmentType: string;
+  /** @nullable */
+  quantity: number | null;
+  /** @nullable */
+  beforeQuantity: number | null;
+  /** @nullable */
+  afterQuantity: number | null;
+  /** @nullable */
+  unitCost?: number | null;
+  /** @nullable */
+  reason?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  referenceNumber?: string | null;
+  /** @nullable */
+  createdBy?: number | null;
+  createdAt: string;
+}
+
+export interface StockTransfer {
+  id: number;
+  tenantId: number;
+  productId: number;
+  transferNumber: string;
+  fromLocation: string;
+  toLocation: string;
+  /** @nullable */
+  quantity: number | null;
+  /** @nullable */
+  beforeQuantity: number | null;
+  /** @nullable */
+  afterQuantity: number | null;
+  status: string;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdBy?: number | null;
+  createdAt: string;
+}
+
+export interface PurchaseItem {
+  id: number;
+  purchaseId: number;
+  /** @nullable */
+  productId?: number | null;
+  productName: string;
+  /** @nullable */
+  quantity: number | null;
+  /** @nullable */
+  receivedQuantity: number | null;
+  /** @nullable */
+  unitPrice: number | null;
+  /** @nullable */
+  mrp?: number | null;
+  /** @nullable */
+  gstRate?: number | null;
+  /** @nullable */
+  gstAmount?: number | null;
+  /** @nullable */
+  discountAmount?: number | null;
+  /** @nullable */
+  subtotal: number | null;
+  /** @nullable */
+  total: number | null;
+  /** @nullable */
+  batchNumber?: string | null;
+  /** @nullable */
+  expiryDate?: string | null;
+}
+
+export type PurchaseStatus = typeof PurchaseStatus[keyof typeof PurchaseStatus];
+
+
+export const PurchaseStatus = {
+  draft: 'draft',
+  ordered: 'ordered',
+  received: 'received',
+  partial: 'partial',
+  cancelled: 'cancelled',
+} as const;
+
+export type PurchasePaymentStatus = typeof PurchasePaymentStatus[keyof typeof PurchasePaymentStatus];
+
+
+export const PurchasePaymentStatus = {
+  unpaid: 'unpaid',
+  partial: 'partial',
+  paid: 'paid',
+} as const;
+
+export interface Purchase {
+  id: number;
+  tenantId: number;
+  /** @nullable */
+  supplierId?: number | null;
+  purchaseNumber: string;
+  /** @nullable */
+  invoiceNumber?: string | null;
+  /** @nullable */
+  invoiceDate?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  status: PurchaseStatus;
+  subtotal: number;
+  taxAmount: number;
+  discountAmount: number;
+  total: number;
+  paidAmount: number;
+  paymentStatus: PurchasePaymentStatus;
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdBy?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type ListProductsParams = {
 categoryId?: number;
 search?: string;
@@ -433,4 +727,26 @@ export const ListOrdersStatus = {
   cancelled: 'cancelled',
   refunded: 'refunded',
 } as const;
+
+export type ListSuppliersParams = {
+search?: string;
+};
+
+export type GetInventoryLogsParams = {
+productId?: number;
+type?: string;
+limit?: number;
+offset?: number;
+};
+
+export type ListStockAdjustmentsParams = {
+limit?: number;
+offset?: number;
+};
+
+export type ListPurchasesParams = {
+status?: string;
+limit?: number;
+offset?: number;
+};
 

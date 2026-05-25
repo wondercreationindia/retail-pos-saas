@@ -3,3 +3,8 @@ export * from "./users";
 export * from "./categories";
 export * from "./products";
 export * from "./orders";
+export * from "./suppliers";
+export * from "./inventory_logs";
+export * from "./purchases";
+export * from "./stock_adjustments";
+export * from "./stock_transfers";

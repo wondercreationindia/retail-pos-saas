@@ -7,6 +7,9 @@ import categoriesRouter from "./categories";
 import productsRouter from "./products";
 import ordersRouter from "./orders";
 import dashboardRouter from "./dashboard";
+import suppliersRouter from "./suppliers";
+import inventoryRouter from "./inventory";
+import purchasesRouter from "./purchases";
 
 const router: IRouter = Router();
 
@@ -18,5 +21,8 @@ router.use(categoriesRouter);
 router.use(productsRouter);
 router.use(ordersRouter);
 router.use(dashboardRouter);
+router.use(suppliersRouter);
+router.use(inventoryRouter);
+router.use(purchasesRouter);
 
 export default router;

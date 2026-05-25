@@ -13,6 +13,9 @@ import Orders from "@/pages/orders";
 import Categories from "@/pages/categories";
 import Users from "@/pages/users";
 import Settings from "@/pages/settings";
+import Inventory from "@/pages/inventory";
+import Suppliers from "@/pages/suppliers";
+import Purchases from "@/pages/purchases";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -57,6 +60,15 @@ function Router() {
       </Route>
       <Route path="/settings">
         <ProtectedRoute component={Settings} />
+      </Route>
+      <Route path="/inventory">
+        <ProtectedRoute component={Inventory} />
+      </Route>
+      <Route path="/suppliers">
+        <ProtectedRoute component={Suppliers} />
+      </Route>
+      <Route path="/purchases">
+        <ProtectedRoute component={Purchases} />
       </Route>
       <Route path="/">
         {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}

@@ -24,6 +24,12 @@ tags:
     description: Sales orders
   - name: dashboard
     description: Dashboard analytics
+  - name: suppliers
+    description: Supplier management
+  - name: inventory
+    description: Inventory management
+  - name: purchases
+    description: Purchase management
 
 paths:
   /healthz:
@@ -539,6 +545,331 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SalesByDay"
+
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      tags: [suppliers]
+      summary: List all suppliers
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of suppliers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Supplier"
+    post:
+      operationId: createSupplier
+      tags: [suppliers]
+      summary: Create a supplier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierInput"
+      responses:
+        "201":
+          description: Created supplier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+
+  /suppliers/{id}:
+    get:
+      operationId: getSupplier
+      tags: [suppliers]
+      summary: Get a supplier by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Supplier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+    patch:
+      operationId: updateSupplier
+      tags: [suppliers]
+      summary: Update a supplier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierInput"
+      responses:
+        "200":
+          description: Updated supplier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+    delete:
+      operationId: deleteSupplier
+      tags: [suppliers]
+      summary: Delete a supplier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /inventory/overview:
+    get:
+      operationId: getInventoryOverview
+      tags: [inventory]
+      summary: Get inventory overview stats
+      responses:
+        "200":
+          description: Inventory overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryOverview"
+
+  /inventory/low-stock:
+    get:
+      operationId: getLowStockProducts
+      tags: [inventory]
+      summary: Get low stock products
+      responses:
+        "200":
+          description: Low stock products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LowStockProduct"
+
+  /inventory/logs:
+    get:
+      operationId: getInventoryLogs
+      tags: [inventory]
+      summary: Get inventory logs
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Inventory logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryLog"
+
+  /inventory/adjustments:
+    get:
+      operationId: listStockAdjustments
+      tags: [inventory]
+      summary: List stock adjustments
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stock adjustments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockAdjustment"
+    post:
+      operationId: createStockAdjustment
+      tags: [inventory]
+      summary: Create a stock adjustment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockAdjustmentInput"
+      responses:
+        "201":
+          description: Created adjustment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockAdjustment"
+
+  /inventory/transfers:
+    get:
+      operationId: listStockTransfers
+      tags: [inventory]
+      summary: List stock transfers
+      responses:
+        "200":
+          description: Stock transfers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockTransfer"
+    post:
+      operationId: createStockTransfer
+      tags: [inventory]
+      summary: Create a stock transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockTransferInput"
+      responses:
+        "201":
+          description: Created transfer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockTransfer"
+
+  /purchases:
+    get:
+      operationId: listPurchases
+      tags: [purchases]
+      summary: List all purchases
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of purchases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Purchase"
+    post:
+      operationId: createPurchase
+      tags: [purchases]
+      summary: Create a purchase order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseInput"
+      responses:
+        "201":
+          description: Created purchase
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purchase"
+
+  /purchases/{id}:
+    get:
+      operationId: getPurchase
+      tags: [purchases]
+      summary: Get a purchase by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Purchase with items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purchase"
+    patch:
+      operationId: updatePurchase
+      tags: [purchases]
+      summary: Update purchase status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseUpdateInput"
+      responses:
+        "200":
+          description: Updated purchase
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purchase"
+    delete:
+      operationId: deletePurchase
+      tags: [purchases]
+      summary: Delete a draft purchase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /dashboard/top-products:
     get:
@@ -1126,3 +1457,446 @@ components:
         totalRevenue:
           type: number
           format: float
+
+    Supplier:
+      type: object
+      required: [id, tenantId, name, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        name:
+          type: string
+        code:
+          type: ["string", "null"]
+        contactName:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        pincode:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        gstNumber:
+          type: ["string", "null"]
+        panNumber:
+          type: ["string", "null"]
+        paymentTerms:
+          type: ["integer", "null"]
+        creditLimit:
+          type: ["number", "null"]
+          format: float
+        openingBalance:
+          type: ["number", "null"]
+          format: float
+        currentBalance:
+          type: ["number", "null"]
+          format: float
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SupplierInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        contactName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        pincode:
+          type: string
+        country:
+          type: string
+        gstNumber:
+          type: string
+        panNumber:
+          type: string
+        paymentTerms:
+          type: integer
+        creditLimit:
+          type: number
+          format: float
+        openingBalance:
+          type: number
+          format: float
+        notes:
+          type: string
+        status:
+          type: string
+
+    InventoryOverview:
+      type: object
+      required: [totalProducts, activeProducts, totalStockValue, totalRetailValue, lowStockProducts, outOfStock]
+      properties:
+        totalProducts:
+          type: integer
+        activeProducts:
+          type: integer
+        totalStockValue:
+          type: number
+          format: float
+        totalRetailValue:
+          type: number
+          format: float
+        lowStockProducts:
+          type: integer
+        outOfStock:
+          type: integer
+
+    LowStockProduct:
+      type: object
+      required: [id, name, stock, minStockAlert]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sku:
+          type: ["string", "null"]
+        stock:
+          type: integer
+        minStockAlert:
+          type: integer
+        price:
+          type: ["number", "null"]
+          format: float
+        categoryId:
+          type: ["integer", "null"]
+
+    InventoryLog:
+      type: object
+      required: [id, tenantId, productId, type, quantity, beforeQuantity, afterQuantity, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        productId:
+          type: integer
+        type:
+          type: string
+        quantity:
+          type: ["number", "null"]
+          format: float
+        beforeQuantity:
+          type: ["number", "null"]
+          format: float
+        afterQuantity:
+          type: ["number", "null"]
+          format: float
+        unitCost:
+          type: ["number", "null"]
+          format: float
+        batchNumber:
+          type: ["string", "null"]
+        expiryDate:
+          type: ["string", "null"]
+        referenceType:
+          type: ["string", "null"]
+        referenceId:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        createdBy:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    StockAdjustmentInput:
+      type: object
+      required: [productId, adjustmentType, quantity]
+      properties:
+        productId:
+          type: integer
+        adjustmentType:
+          type: string
+          enum: [add, remove, damage, expiry, recount]
+        quantity:
+          type: number
+          format: float
+        reason:
+          type: string
+        notes:
+          type: string
+        referenceNumber:
+          type: string
+        unitCost:
+          type: number
+          format: float
+
+    StockTransferInput:
+      type: object
+      required: [productId, toLocation, quantity]
+      properties:
+        productId:
+          type: integer
+        fromLocation:
+          type: string
+        toLocation:
+          type: string
+        quantity:
+          type: number
+          format: float
+        notes:
+          type: string
+
+    PurchaseInput:
+      type: object
+      properties:
+        supplierId:
+          type: integer
+        invoiceNumber:
+          type: string
+        invoiceDate:
+          type: string
+        dueDate:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseItemInput"
+
+    PurchaseItemInput:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: number
+          format: float
+        unitPrice:
+          type: number
+          format: float
+        mrp:
+          type: number
+          format: float
+        gstRate:
+          type: number
+          format: float
+        gstAmount:
+          type: number
+          format: float
+        subtotal:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+
+    PurchaseUpdateInput:
+      type: object
+      properties:
+        status:
+          type: string
+        paidAmount:
+          type: number
+          format: float
+        paymentMethod:
+          type: string
+        notes:
+          type: string
+
+    StockAdjustment:
+      type: object
+      required: [id, tenantId, productId, adjustmentType, quantity, beforeQuantity, afterQuantity, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        productId:
+          type: integer
+        adjustmentType:
+          type: string
+        quantity:
+          type: ["number", "null"]
+          format: float
+        beforeQuantity:
+          type: ["number", "null"]
+          format: float
+        afterQuantity:
+          type: ["number", "null"]
+          format: float
+        unitCost:
+          type: ["number", "null"]
+          format: float
+        reason:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        referenceNumber:
+          type: ["string", "null"]
+        createdBy:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    StockTransfer:
+      type: object
+      required: [id, tenantId, productId, transferNumber, fromLocation, toLocation, quantity, beforeQuantity, afterQuantity, status, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        productId:
+          type: integer
+        transferNumber:
+          type: string
+        fromLocation:
+          type: string
+        toLocation:
+          type: string
+        quantity:
+          type: ["number", "null"]
+          format: float
+        beforeQuantity:
+          type: ["number", "null"]
+          format: float
+        afterQuantity:
+          type: ["number", "null"]
+          format: float
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdBy:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    PurchaseItem:
+      type: object
+      required: [id, purchaseId, productName, quantity, receivedQuantity, unitPrice, subtotal, total]
+      properties:
+        id:
+          type: integer
+        purchaseId:
+          type: integer
+        productId:
+          type: ["integer", "null"]
+        productName:
+          type: string
+        quantity:
+          type: ["number", "null"]
+          format: float
+        receivedQuantity:
+          type: ["number", "null"]
+          format: float
+        unitPrice:
+          type: ["number", "null"]
+          format: float
+        mrp:
+          type: ["number", "null"]
+          format: float
+        gstRate:
+          type: ["number", "null"]
+          format: float
+        gstAmount:
+          type: ["number", "null"]
+          format: float
+        discountAmount:
+          type: ["number", "null"]
+          format: float
+        subtotal:
+          type: ["number", "null"]
+          format: float
+        total:
+          type: ["number", "null"]
+          format: float
+        batchNumber:
+          type: ["string", "null"]
+        expiryDate:
+          type: ["string", "null"]
+
+    Purchase:
+      type: object
+      required: [id, tenantId, purchaseNumber, status, subtotal, taxAmount, discountAmount, total, paidAmount, paymentStatus, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        supplierId:
+          type: ["integer", "null"]
+        purchaseNumber:
+          type: string
+        invoiceNumber:
+          type: ["string", "null"]
+        invoiceDate:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [draft, ordered, received, partial, cancelled]
+        subtotal:
+          type: number
+          format: float
+        taxAmount:
+          type: number
+          format: float
+        discountAmount:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        paidAmount:
+          type: number
+          format: float
+        paymentStatus:
+          type: string
+          enum: [unpaid, partial, paid]
+        paymentMethod:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdBy:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

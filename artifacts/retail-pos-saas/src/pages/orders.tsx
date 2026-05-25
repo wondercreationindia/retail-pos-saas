@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 
 export default function Orders() {
-  const { data: orders, isLoading } = useListOrders({ query: { queryKey: getListOrdersQueryKey() } });
+  const { data: orders, isLoading } = useListOrders(undefined, { query: { queryKey: getListOrdersQueryKey() } });
 
   return (
     <div className="space-y-8">
