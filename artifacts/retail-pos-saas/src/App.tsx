@@ -25,6 +25,7 @@ import AccountingVouchers from "@/pages/accounting-vouchers";
 import AccountingExpenses from "@/pages/accounting-expenses";
 import AccountingLedger from "@/pages/accounting-ledger";
 import AccountingReports from "@/pages/accounting-reports";
+import ReportsPage from "@/pages/reports";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -109,6 +110,9 @@ function Router() {
       </Route>
       <Route path="/accounting/reports">
         <ProtectedRoute component={AccountingReports} />
+      </Route>
+      <Route path="/reports">
+        <ProtectedRoute component={ReportsPage} />
       </Route>
       <Route path="/pos/invoices">
         <FullScreenRoute component={InvoiceHistory} />

@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
-import { Home, Package, ShoppingCart, Tags, Users, Settings, LogOut, Warehouse, Truck, ShoppingBag, MonitorSmartphone, UserRound, BookOpen, Receipt, FileText, CreditCard, BarChart3, Landmark } from "lucide-react";
+import { Home, Package, ShoppingCart, Tags, Users, Settings, LogOut, Warehouse, Truck, ShoppingBag, MonitorSmartphone, UserRound, BookOpen, Receipt, FileText, CreditCard, BarChart3, Landmark, LineChart } from "lucide-react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -111,6 +111,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link href="/accounting/reports"><BarChart3 /> Reports</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Reports</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href="/reports"><LineChart /> Reports & Analytics</Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

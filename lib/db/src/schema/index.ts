@@ -21,3 +21,4 @@ export * from "./journal_entries";
 export * from "./vouchers";
 export * from "./expenses";
 export * from "./ledger_transactions";
+export * from "./report_logs";

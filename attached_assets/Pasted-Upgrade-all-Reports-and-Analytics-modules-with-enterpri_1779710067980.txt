@@ -1,0 +1,101 @@
+Upgrade all Reports and Analytics modules with enterprise-grade export, printing, and reporting capabilities.
+
+IMPORTANT:
+Do not break existing reports, billing, inventory, or accounting modules.
+
+ADD THESE FEATURES TO ALL REPORTS:
+
+EXPORT FEATURES:
+
+* Export to Excel (.xlsx)
+* Export to CSV
+* Export to PDF
+* Print report option
+* Download report option
+* Share report option
+
+PRINTING FEATURES:
+
+* A4 print layout
+* Landscape/portrait support
+* Company logo on reports
+* GST-compliant print format
+* Header/footer support
+* Page numbering
+* Print preview
+* Thermal print support where applicable
+
+REPORT FILTERS:
+
+* date range filter
+* today/yesterday/week/month/custom
+* customer filter
+* supplier filter
+* product/category filter
+* payment mode filter
+* cashier filter
+* invoice filter
+
+ADVANCED REPORTS:
+
+* sales report
+* purchase report
+* GST report
+* profit/loss report
+* stock valuation report
+* low stock report
+* dead stock report
+* customer ledger report
+* supplier ledger report
+* expense report
+* payment collection report
+* cashier shift report
+* daily closing report
+
+REPORT UI/UX:
+
+* professional modern report UI
+* sortable tables
+* searchable reports
+* pagination
+* sticky table headers
+* responsive tables
+* summary cards
+* charts/graphs where applicable
+
+EXCEL EXPORT REQUIREMENTS:
+
+* properly formatted columns
+* auto column width
+* currency formatting
+* GST formatting
+* totals and subtotals
+* multi-sheet export support
+
+PDF EXPORT REQUIREMENTS:
+
+* high-quality PDF rendering
+* proper page breaks
+* optimized typography
+* accurate invoice/report formatting
+
+TECHNICAL:
+
+* optimized query performance
+* server-side pagination
+* export large datasets safely
+* background export support for large reports
+
+DATABASE:
+Create:
+
+* report_export_logs
+* report_templates
+
+IMPORTANT:
+
+* maintain strict tenant isolation
+* ensure reports load quickly
+* support low-end retail systems
+* maintain INR ₹ currency formatting
+* ensure mobile/tablet compatibility
