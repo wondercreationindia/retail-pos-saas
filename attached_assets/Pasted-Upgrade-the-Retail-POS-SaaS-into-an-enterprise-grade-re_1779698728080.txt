@@ -1,0 +1,145 @@
+Upgrade the Retail POS SaaS into an enterprise-grade retail ERP system.
+
+Add the following advanced modules and features.
+
+PURCHASE & GRN MODULE:
+
+* Purchase invoice printing
+* A4 PDF purchase invoice
+* GST-compliant purchase invoice
+* GRN (Goods Receipt Note)
+* Partial stock receive
+* Damaged goods handling
+* Supplier invoice attachment upload
+* Purchase return module
+* Purchase approval workflow
+
+AUTO BARCODE SYSTEM:
+
+* Automatic barcode generation
+* EAN13 support
+* CODE128 support
+* QR code support
+* Variant-wise barcode
+* Barcode uniqueness validation
+* Bulk barcode generation
+
+BARCODE PRINTING SYSTEM:
+
+* A4 barcode sticker printing
+* Custom sticker width/height
+* Margin controls
+* Zoom controls
+* Multiple barcode templates
+* Batch barcode printing
+* Product name toggle
+* MRP toggle
+* SKU toggle
+* Store name toggle
+* Print preview system
+
+CUSTOMER MANAGEMENT:
+
+* Customer ledger
+* GST customer support
+* Credit customer management
+* Loyalty points
+* WhatsApp invoice sharing
+* Customer purchase history
+* Outstanding dues tracking
+
+SALES RETURN MODULE:
+
+* Full return
+* Partial return
+* Refund management
+* Exchange support
+* Inventory auto restore
+
+ACCOUNTING MODULE:
+
+* Cashbook
+* Ledger
+* Payment voucher
+* Receipt voucher
+* Expense management
+* Profit/loss basics
+* Outstanding reports
+
+POS BILLING IMPROVEMENTS:
+
+* Thermal receipt printing
+* Hold/resume bills
+* Split payment
+* UPI/Card/Cash support
+* Keyboard shortcuts
+* Ultra-fast billing UI
+* Touch-friendly billing screen
+
+REPORTS & ANALYTICS:
+
+* Daily sales report
+* GST report
+* Profit report
+* Dead stock report
+* Fast moving products
+* Stock valuation
+* Purchase analytics
+* Customer analytics
+
+E-COMMERCE FEATURES:
+
+* Publish/unpublish products
+* Public online catalog
+* SEO-ready product pages
+* Online order support
+* Product slug system
+
+MOBILE APP READY:
+
+* REST API optimization
+* Token-secured APIs
+* Pagination support
+* Lightweight API responses
+
+TECHNICAL REQUIREMENTS:
+
+* Maintain strict tenant isolation using tenant_id
+* Use Supabase PostgreSQL
+* Use Drizzle ORM
+* TypeScript only
+* Modern Tailwind UI
+* Responsive design
+* Production-ready architecture
+* Optimized database indexing
+
+IMPORTANT:
+Do not break existing modules.
+Maintain scalability for future Flutter mobile app and SaaS expansion.
+
+ADDITIONAL IMPORTANT REQUIREMENTS:
+
+* Do not overwrite or break existing modules
+* Maintain backward compatibility
+* Create database migrations safely
+* Use modular architecture
+* Add proper loading states and error handling
+* Add role-based access control
+* Add audit logs for important actions
+* Add proper validation for all forms and APIs
+* Keep the application optimized for low-end retail hardware
+* Ensure all modules work properly on both desktop and tablet devices
+* Prepare architecture for future offline sync support
+* Follow enterprise-grade folder structure and clean code practices
+
+Before making schema changes:
+
+* verify existing tables
+* avoid duplicate migrations
+* maintain data integrity
+
+After implementation:
+
+* verify all existing pages still work
+* verify tenant isolation remains intact
+* verify inventory and purchases are unaffected
