@@ -24,8 +24,11 @@ import type {
   Category,
   CategoryInput,
   CategoryUpdate,
+  CouponValidateInput,
+  CouponValidateResult,
   Customer,
   CustomerInput,
+  CustomerSaleHistoryItem,
   DashboardSummary,
   ErrorResponse,
   GetInventoryLogsParams,
@@ -43,6 +46,7 @@ import type {
   ListSuppliersParams,
   LoginInput,
   LowStockProduct,
+  LoyaltyTransaction,
   Order,
   OrderInput,
   OrderUpdate,
@@ -52,6 +56,7 @@ import type {
   Purchase,
   PurchaseInput,
   PurchaseUpdateInput,
+  QuickAddCustomerInput,
   RegisterInput,
   Sale,
   SaleInput,
@@ -4281,4 +4286,300 @@ export const useDeleteHeldBill = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteHeldBillMutationOptions(options));
     }
+
+export const getValidateCouponUrl = () => {
+
+
+
+
+  return `/api/pos/coupons/validate`
+}
+
+/**
+ * @summary Validate a coupon code and calculate discount
+ */
+export const validateCoupon = async (couponValidateInput: CouponValidateInput, options?: RequestInit): Promise<CouponValidateResult> => {
+
+  return customFetch<CouponValidateResult>(getValidateCouponUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      couponValidateInput,)
+  }
+);}
+
+
+
+
+export const getValidateCouponMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateCoupon>>, TError,{data: BodyType<CouponValidateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof validateCoupon>>, TError,{data: BodyType<CouponValidateInput>}, TContext> => {
+
+const mutationKey = ['validateCoupon'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof validateCoupon>>, {data: BodyType<CouponValidateInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  validateCoupon(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ValidateCouponMutationResult = NonNullable<Awaited<ReturnType<typeof validateCoupon>>>
+    export type ValidateCouponMutationBody = BodyType<CouponValidateInput>
+    export type ValidateCouponMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Validate a coupon code and calculate discount
+ */
+export const useValidateCoupon = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateCoupon>>, TError,{data: BodyType<CouponValidateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof validateCoupon>>,
+        TError,
+        {data: BodyType<CouponValidateInput>},
+        TContext
+      > => {
+      return useMutation(getValidateCouponMutationOptions(options));
+    }
+
+export const getPosQuickAddCustomerUrl = () => {
+
+
+
+
+  return `/api/pos/customers/quick-add`
+}
+
+/**
+ * @summary Quick-add a customer from POS
+ */
+export const posQuickAddCustomer = async (quickAddCustomerInput: QuickAddCustomerInput, options?: RequestInit): Promise<Customer> => {
+
+  return customFetch<Customer>(getPosQuickAddCustomerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      quickAddCustomerInput,)
+  }
+);}
+
+
+
+
+export const getPosQuickAddCustomerMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof posQuickAddCustomer>>, TError,{data: BodyType<QuickAddCustomerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof posQuickAddCustomer>>, TError,{data: BodyType<QuickAddCustomerInput>}, TContext> => {
+
+const mutationKey = ['posQuickAddCustomer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof posQuickAddCustomer>>, {data: BodyType<QuickAddCustomerInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  posQuickAddCustomer(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PosQuickAddCustomerMutationResult = NonNullable<Awaited<ReturnType<typeof posQuickAddCustomer>>>
+    export type PosQuickAddCustomerMutationBody = BodyType<QuickAddCustomerInput>
+    export type PosQuickAddCustomerMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Quick-add a customer from POS
+ */
+export const usePosQuickAddCustomer = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof posQuickAddCustomer>>, TError,{data: BodyType<QuickAddCustomerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof posQuickAddCustomer>>,
+        TError,
+        {data: BodyType<QuickAddCustomerInput>},
+        TContext
+      > => {
+      return useMutation(getPosQuickAddCustomerMutationOptions(options));
+    }
+
+export const getGetCustomerPosHistoryUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/customers/${id}/history`
+}
+
+/**
+ * @summary Get recent POS sales for a customer
+ */
+export const getCustomerPosHistory = async (id: number, options?: RequestInit): Promise<CustomerSaleHistoryItem[]> => {
+
+  return customFetch<CustomerSaleHistoryItem[]>(getGetCustomerPosHistoryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCustomerPosHistoryQueryKey = (id: number,) => {
+    return [
+    `/api/pos/customers/${id}/history`
+    ] as const;
+    }
+
+
+export const getGetCustomerPosHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getCustomerPosHistory>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCustomerPosHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCustomerPosHistoryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCustomerPosHistory>>> = ({ signal }) => getCustomerPosHistory(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCustomerPosHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCustomerPosHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getCustomerPosHistory>>>
+export type GetCustomerPosHistoryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get recent POS sales for a customer
+ */
+
+export function useGetCustomerPosHistory<TData = Awaited<ReturnType<typeof getCustomerPosHistory>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCustomerPosHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCustomerPosHistoryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCustomerLoyaltyUrl = (id: number,) => {
+
+
+
+
+  return `/api/pos/customers/${id}/loyalty`
+}
+
+/**
+ * @summary Get loyalty transaction history for a customer
+ */
+export const getCustomerLoyalty = async (id: number, options?: RequestInit): Promise<LoyaltyTransaction[]> => {
+
+  return customFetch<LoyaltyTransaction[]>(getGetCustomerLoyaltyUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCustomerLoyaltyQueryKey = (id: number,) => {
+    return [
+    `/api/pos/customers/${id}/loyalty`
+    ] as const;
+    }
+
+
+export const getGetCustomerLoyaltyQueryOptions = <TData = Awaited<ReturnType<typeof getCustomerLoyalty>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCustomerLoyalty>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCustomerLoyaltyQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCustomerLoyalty>>> = ({ signal }) => getCustomerLoyalty(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCustomerLoyalty>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCustomerLoyaltyQueryResult = NonNullable<Awaited<ReturnType<typeof getCustomerLoyalty>>>
+export type GetCustomerLoyaltyQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get loyalty transaction history for a customer
+ */
+
+export function useGetCustomerLoyalty<TData = Awaited<ReturnType<typeof getCustomerLoyalty>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCustomerLoyalty>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCustomerLoyaltyQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

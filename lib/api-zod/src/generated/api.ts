@@ -1394,3 +1394,70 @@ export const DeleteHeldBillParams = zod.object({
 })
 
 
+/**
+ * @summary Validate a coupon code and calculate discount
+ */
+export const ValidateCouponBody = zod.object({
+  "code": zod.string(),
+  "orderAmount": zod.number()
+})
+
+export const ValidateCouponResponse = zod.object({
+  "coupon": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "type": zod.string(),
+  "value": zod.number(),
+  "description": zod.string().nullish()
+}),
+  "discountAmount": zod.number()
+})
+
+
+/**
+ * @summary Quick-add a customer from POS
+ */
+export const PosQuickAddCustomerBody = zod.object({
+  "name": zod.string(),
+  "phone": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get recent POS sales for a customer
+ */
+export const GetCustomerPosHistoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCustomerPosHistoryResponseItem = zod.object({
+  "id": zod.number(),
+  "saleNumber": zod.string(),
+  "total": zod.number(),
+  "paymentStatus": zod.string(),
+  "loyaltyPointsEarned": zod.number().optional(),
+  "createdAt": zod.coerce.date()
+})
+export const GetCustomerPosHistoryResponse = zod.array(GetCustomerPosHistoryResponseItem)
+
+
+/**
+ * @summary Get loyalty transaction history for a customer
+ */
+export const GetCustomerLoyaltyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCustomerLoyaltyResponseItem = zod.object({
+  "id": zod.number(),
+  "customerId": zod.number(),
+  "saleId": zod.number().nullish(),
+  "type": zod.string(),
+  "points": zod.number(),
+  "balance": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const GetCustomerLoyaltyResponse = zod.array(GetCustomerLoyaltyResponseItem)
+
+

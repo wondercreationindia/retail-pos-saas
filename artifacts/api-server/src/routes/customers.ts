@@ -57,7 +57,7 @@ router.post("/customers", requireAuth, async (req, res) => {
 
 router.get("/customers/:id", requireAuth, async (req, res) => {
   const tenantId = req.user!.tenantId;
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
 
   const [customer] = await db
     .select()
@@ -66,7 +66,7 @@ router.get("/customers/:id", requireAuth, async (req, res) => {
 
   if (!customer) return res.status(404).json({ error: "Customer not found" });
 
-  res.json({
+  return res.json({
     ...customer,
     creditLimit: customer.creditLimit ? parseFloat(customer.creditLimit) : null,
     outstandingDues: parseFloat(customer.outstandingDues),
@@ -76,7 +76,7 @@ router.get("/customers/:id", requireAuth, async (req, res) => {
 
 router.patch("/customers/:id", requireAuth, async (req, res) => {
   const tenantId = req.user!.tenantId;
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   const { name, phone, email, gstin, address, city, state, pincode, isCredit, creditLimit, notes } = req.body;
 
   const [customer] = await db
@@ -87,7 +87,7 @@ router.patch("/customers/:id", requireAuth, async (req, res) => {
 
   if (!customer) return res.status(404).json({ error: "Customer not found" });
 
-  res.json({
+  return res.json({
     ...customer,
     creditLimit: customer.creditLimit ? parseFloat(customer.creditLimit) : null,
     outstandingDues: parseFloat(customer.outstandingDues),
@@ -97,7 +97,7 @@ router.patch("/customers/:id", requireAuth, async (req, res) => {
 
 router.delete("/customers/:id", requireAuth, async (req, res) => {
   const tenantId = req.user!.tenantId;
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
 
   await db
     .update(customersTable)

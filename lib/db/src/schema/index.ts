@@ -10,3 +10,5 @@ export * from "./stock_adjustments";
 export * from "./stock_transfers";
 export * from "./customers";
 export * from "./sales";
+export * from "./coupons";
+export * from "./loyalty_transactions";

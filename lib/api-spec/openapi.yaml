@@ -1099,6 +1099,96 @@ paths:
         "204":
           description: Deleted
 
+  /pos/coupons/validate:
+    post:
+      operationId: validateCoupon
+      tags: [pos]
+      summary: Validate a coupon code and calculate discount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CouponValidateInput"
+      responses:
+        "200":
+          description: Coupon valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CouponValidateResult"
+        "400":
+          description: Coupon not applicable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Coupon not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /pos/customers/quick-add:
+    post:
+      operationId: posQuickAddCustomer
+      tags: [pos]
+      summary: Quick-add a customer from POS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuickAddCustomerInput"
+      responses:
+        "201":
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /pos/customers/{id}/history:
+    get:
+      operationId: getCustomerPosHistory
+      tags: [pos]
+      summary: Get recent POS sales for a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Recent sales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerSaleHistoryItem"
+
+  /pos/customers/{id}/loyalty:
+    get:
+      operationId: getCustomerLoyalty
+      tags: [pos]
+      summary: Get loyalty transaction history for a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Loyalty transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoyaltyTransaction"
+
 components:
   schemas:
     HealthStatus:
@@ -2422,6 +2512,89 @@ components:
           type: ["string", "null"]
         cartData:
           type: object
+        createdAt:
+          type: string
+          format: date-time
+
+    CouponValidateInput:
+      type: object
+      required: [code, orderAmount]
+      properties:
+        code:
+          type: string
+        orderAmount:
+          type: number
+          format: float
+
+    CouponValidateResult:
+      type: object
+      required: [coupon, discountAmount]
+      properties:
+        coupon:
+          type: object
+          required: [id, code, type, value]
+          properties:
+            id:
+              type: integer
+            code:
+              type: string
+            type:
+              type: string
+            value:
+              type: number
+              format: float
+            description:
+              type: ["string", "null"]
+        discountAmount:
+          type: number
+          format: float
+
+    QuickAddCustomerInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        phone:
+          type: ["string", "null"]
+
+    CustomerSaleHistoryItem:
+      type: object
+      required: [id, saleNumber, total, paymentStatus, createdAt]
+      properties:
+        id:
+          type: integer
+        saleNumber:
+          type: string
+        total:
+          type: number
+          format: float
+        paymentStatus:
+          type: string
+        loyaltyPointsEarned:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    LoyaltyTransaction:
+      type: object
+      required: [id, customerId, type, points, balance, createdAt]
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+        saleId:
+          type: ["integer", "null"]
+        type:
+          type: string
+        points:
+          type: integer
+        balance:
+          type: integer
+        notes:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time

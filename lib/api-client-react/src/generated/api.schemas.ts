@@ -895,6 +895,53 @@ export interface HeldBill {
   createdAt: string;
 }
 
+export interface CouponValidateInput {
+  code: string;
+  orderAmount: number;
+}
+
+export type CouponValidateResultCoupon = {
+  id: number;
+  code: string;
+  type: string;
+  value: number;
+  /** @nullable */
+  description?: string | null;
+};
+
+export interface CouponValidateResult {
+  coupon: CouponValidateResultCoupon;
+  discountAmount: number;
+}
+
+export interface QuickAddCustomerInput {
+  name: string;
+  /** @nullable */
+  phone?: string | null;
+}
+
+export interface CustomerSaleHistoryItem {
+  id: number;
+  saleNumber: string;
+  total: number;
+  paymentStatus: string;
+  loyaltyPointsEarned?: number;
+  createdAt: string;
+}
+
+export interface LoyaltyTransaction {
+  id: number;
+  customerId: number;
+  /** @nullable */
+  saleId?: number | null;
+  type: string;
+  points: number;
+  balance: number;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
 export type ListProductsParams = {
 categoryId?: number;
 search?: string;

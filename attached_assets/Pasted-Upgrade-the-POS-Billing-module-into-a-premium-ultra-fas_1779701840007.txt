@@ -1,0 +1,120 @@
+Upgrade the POS Billing module into a premium ultra-fast retail billing experience inspired by Shopify POS, Square POS, Loyverse, Lightspeed, and Vyapar.
+
+IMPORTANT:
+Do not break existing billing, inventory, or barcode functionality.
+
+POS BILLING ENHANCEMENTS:
+
+SEARCH & SCANNING:
+
+* SKU search
+* barcode scan support
+* instant product search
+* search by:
+
+  * barcode
+  * SKU
+  * product name
+  * category
+* recent search history
+* fast loading optimized search
+
+BILL-LEVEL DISCOUNT:
+
+* percentage discount on full bill
+* fixed amount discount
+* before-tax discount
+* after-tax discount
+* discount reason note
+* manager approval support
+
+CUSTOMER FEATURES:
+
+* quick customer add
+* search customer by mobile
+* customer credit balance
+* customer purchase history
+* customer outstanding dues
+* walk-in customer support
+
+REWARD POINTS & LOYALTY:
+
+* reward point earning
+* reward point redeem
+* configurable loyalty rules
+* minimum redeem limit
+* loyalty transaction history
+* loyalty tier support
+
+WHATSAPP INTEGRATION:
+
+* send invoice via WhatsApp
+* send receipt via WhatsApp
+* WhatsApp Web integration
+* PDF invoice attachment
+* customer number autofill
+
+ADVANCED BILLING FEATURES:
+
+* hold bill
+* resume bill
+* parked bills
+* split payment
+* multiple payment methods
+* cash/card/UPI support
+* round-off support
+* coupon support
+* promotional pricing
+* combo product billing
+
+ADVANCED POS UI:
+
+* modern premium POS UI
+* touch-friendly interface
+* tablet optimized layout
+* sticky cart section
+* floating payment panel
+* large billing buttons
+* dark/light mode
+* smooth animations
+* category quick access
+* favorite products section
+* fast-moving products section
+
+THERMAL PRINTING:
+
+* 58mm thermal print
+* 80mm thermal print
+* GST receipt format
+* QR code on invoice
+* store logo support
+* customizable receipt footer
+
+PERFORMANCE:
+
+* ultra-fast billing workflow
+* optimized state management
+* instant cart updates
+* low-latency UI rendering
+* optimized for low-end retail hardware
+
+DATABASE:
+Create required tables:
+
+* loyalty_points
+* loyalty_transactions
+* held_bills
+* coupons
+* whatsapp_logs
+
+TECHNICAL:
+
+* maintain strict tenant isolation
+* TypeScript only
+* scalable architecture
+* mobile app API ready
+* responsive design
+* optimized database queries
+
+IMPORTANT:
+Focus heavily on retail billing speed, smooth workflow, and modern premium UI/UX quality.
